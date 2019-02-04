@@ -1,0 +1,10 @@
+SenML
+Copyright 2019 Farshid Tavakolizadeh
+
+This project is an independent fork of senmlCat (https://github.com/cisco/senml)
+developed by Cullen Jennings under BSD 2 License.
+
+This project includes the following dependencies developed by
+the corresponding developers and organisations:
+
+* https://github.com/ugorji/go by Ugorji Nwoke (MIT License)
