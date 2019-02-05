@@ -1,11 +1,9 @@
-// SenML encoder and decoder to pare Sensor Markup Language
 package senml
 
 import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -31,15 +29,19 @@ type OutputOptions struct {
 	Topic       string
 }
 
-type SenMLRecord struct {
+// Pack is a SenML Pack:
+//	One or more SenML Records in an array structure.
+type Pack []Record
+
+// Record is a SenML Record:
+//	One measurement or configuration instance in time presented using the SenML data model.
+type Record struct {
 	XMLName *bool `json:"_,omitempty" xml:"senml"`
 
 	BaseName    string  `json:"bn,omitempty"  xml:"bn,attr,omitempty"`
 	BaseTime    float64 `json:"bt,omitempty"  xml:"bt,attr,omitempty"`
 	BaseUnit    string  `json:"bu,omitempty"  xml:"bu,attr,omitempty"`
 	BaseVersion int     `json:"bver,omitempty"  xml:"bver,attr,omitempty"`
-
-	Link string `json:"l,omitempty"  xml:"l,attr,omitempty"`
 
 	Name       string  `json:"n,omitempty"  xml:"n,attr,omitempty"`
 	Unit       string  `json:"u,omitempty"  xml:"u,attr,omitempty"`
@@ -54,63 +56,61 @@ type SenMLRecord struct {
 	Sum *float64 `json:"s,omitempty"  xml:"s,attr,omitempty"`
 }
 
-type SenML struct {
-	XMLName *bool  `json:"_,omitempty" xml:"sensml"`
-	Xmlns   string `json:"_,omitempty" xml:"xmlns,attr"`
-
-	Records []SenMLRecord ` xml:"senml"`
+type xmlPack struct {
+	Pack
+	XMLName *bool  `xml:"sensml"`
+	XMLNS   string `xml:"xmlns,attr"`
 }
 
 // Decode takes a SenML message in the given format and parses it and decodes it
-// into the returned SenML record.
-func Decode(msg []byte, format Format) (SenML, error) {
-	var s SenML
+//	into the returned SenML record.
+func Decode(msg []byte, format Format) (Pack, error) {
+	var p Pack
 	var err error
-
-	s.XMLName = nil
-	s.Xmlns = "urn:ietf:params:xml:ns:senml"
 
 	switch {
 	case format == JSON:
 		// parse the input JSON stream
-		err = json.Unmarshal(msg, &s.Records)
+		err = json.Unmarshal(msg, &p)
 		if err != nil {
 			//fmt.Println("error parsing JSON SenML Stream: ", err)
 			//fmt.Println("msg=", msg)
-			return s, err
+			return p, err
 		}
 
 	case format == JSONLINE:
 		// parse the input JSON line
 		lines := strings.Split(string(msg), "\n")
 		for _, line := range lines {
-			r := new(SenMLRecord)
+			r := new(Record)
 			if len(line) > 5 {
 				err = json.Unmarshal([]byte(line), r)
 				if err != nil {
 					//fmt.Println("error parsing JSON SenML Line: ", err)
-					return s, err
+					return p, err
 				}
-				s.Records = append(s.Records, *r)
+				p = append(p, *r)
 			}
 		}
 
 	case format == XML:
 		// parse the input XML
-		err = xml.Unmarshal(msg, &s)
+		var temp xmlPack
+		err = xml.Unmarshal(msg, &temp)
 		if err != nil {
 			//fmt.Println("error parsing XML SenML", err)
-			return s, err
+			return nil, err
 		}
+		p = temp.Pack
 
 	case format == CBOR:
 		// parse the input CBOR
 		var cborHandle codec.Handle = new(codec.CborHandle)
 		var decoder *codec.Decoder = codec.NewDecoderBytes(msg, cborHandle)
-		err = decoder.Decode(&s.Records)
+		err = decoder.Decode(&p)
 		if err != nil {
 			//fmt.Println("error parsing CBOR SenML", err)
-			return s, err
+			return p, err
 		}
 
 	case format == MPACK:
@@ -118,31 +118,29 @@ func Decode(msg []byte, format Format) (SenML, error) {
 		// spec for MessagePack is at https://github.com/msgpack/msgpack/
 		var mpackHandle codec.Handle = new(codec.MsgpackHandle)
 		var decoder *codec.Decoder = codec.NewDecoderBytes(msg, mpackHandle)
-		err = decoder.Decode(&s.Records)
+		err = decoder.Decode(&p)
 		if err != nil {
 			//fmt.Println("error parsing MPACK SenML", err)
-			return s, err
+			return p, err
 		}
 
 	}
 
-	if !IsValid(s) {
-		return s, errors.New("SenML record not valid")
+	if err := p.Validate(); err != nil {
+		return p, fmt.Errorf("invalid SenML Pack: %s", err)
 	}
 
-	return s, nil
+	return p, nil
 }
 
 // Encode takes a SenML record, and encodes it using the given format.
-func Encode(s SenML, format Format, options OutputOptions) ([]byte, error) {
+func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 	var data []byte
 	var err error
 
 	if options.Topic == "" {
 		options.Topic = "senml"
 	}
-
-	s.Xmlns = "urn:ietf:params:xml:ns:senml"
 
 	switch {
 
@@ -152,7 +150,7 @@ func Encode(s SenML, format Format, options OutputOptions) ([]byte, error) {
 			// data, err = json.MarshalIndent(s.Records, "", "  ")
 			var lines string
 			lines += fmt.Sprintf("[\n  ")
-			for i, r := range s.Records {
+			for i, r := range p {
 				if i != 0 {
 					lines += ",\n  "
 				}
@@ -166,19 +164,19 @@ func Encode(s SenML, format Format, options OutputOptions) ([]byte, error) {
 			lines += fmt.Sprintf("\n]\n")
 			data = []byte(lines)
 		} else {
-			data, err = json.Marshal(s.Records)
-		}
-		if err != nil {
-			//fmt.Println("error encoding JSON SenML", err)
-			return nil, err
+			return json.Marshal(p)
 		}
 
 	case format == XML:
+		xmlPack := xmlPack{
+			Pack:  p,
+			XMLNS: "urn:ietf:params:xml:ns:senml",
+		}
 		// output a XML version
 		if options.PrettyPrint {
-			data, err = xml.MarshalIndent(s, "", "  ")
+			data, err = xml.MarshalIndent(&xmlPack, "", "  ")
 		} else {
-			data, err = xml.Marshal(s)
+			data, err = xml.Marshal(&xmlPack)
 		}
 		if err != nil {
 			//fmt.Println("error encoding XML SenML", err)
@@ -188,7 +186,7 @@ func Encode(s SenML, format Format, options OutputOptions) ([]byte, error) {
 	case format == CSV:
 		// output a CSV version
 		var lines string
-		for _, r := range s.Records {
+		for _, r := range p {
 			if r.Value != nil {
 				// TODO - replace sprintf with bytes.Buffer
 				lines += fmt.Sprintf("%s,", r.Name)
@@ -212,7 +210,7 @@ func Encode(s SenML, format Format, options OutputOptions) ([]byte, error) {
 		// output a CBOR version
 		var cborHandle codec.Handle = new(codec.CborHandle)
 		var encoder *codec.Encoder = codec.NewEncoderBytes(&data, cborHandle)
-		err = encoder.Encode(s.Records)
+		err = encoder.Encode(p)
 		if err != nil {
 			//fmt.Println("error encoding CBOR SenML", err)
 			return nil, err
@@ -222,16 +220,16 @@ func Encode(s SenML, format Format, options OutputOptions) ([]byte, error) {
 		// output a MPACK version
 		var mpackHandle codec.Handle = new(codec.MsgpackHandle)
 		var encoder *codec.Encoder = codec.NewEncoderBytes(&data, mpackHandle)
-		err = encoder.Encode(s.Records)
+		err = encoder.Encode(p)
 		if err != nil {
 			//fmt.Println("error encoding MPACK SenML", err)
 			return nil, err
 		}
 
 	case format == LINEP:
-		// ouput Line Protocol
+		// output Line Protocol
 		var buf bytes.Buffer
-		for _, r := range s.Records {
+		for _, r := range p {
 			if r.Value != nil {
 				buf.WriteString(options.Topic)
 				buf.WriteString(",n=")
@@ -248,9 +246,9 @@ func Encode(s SenML, format Format, options OutputOptions) ([]byte, error) {
 		data = buf.Bytes()
 
 	case format == JSONLINE:
-		// ouput Line Protocol
+		// output Line Protocol
 		var buf bytes.Buffer
-		for _, r := range s.Records {
+		for _, r := range p {
 			if r.Value != nil {
 				data, err = json.Marshal(r)
 				if err != nil {
@@ -267,28 +265,26 @@ func Encode(s SenML, format Format, options OutputOptions) ([]byte, error) {
 	return data, nil
 }
 
-// Removes all the base items and expands records to have items that include
-// what previosly in base iterms. Convets relative times to absoltue times.
-func Normalize(senml SenML) SenML {
+// Normalize removes all the base items and expands records to have items that include
+//	what previously in base items. Converts relative times to absolute times.
+func (p Pack) Normalize() Pack {
 	var bname string = ""
 	var btime float64 = 0
 	var bunit string = ""
 	var ver = 5
-	var ret SenML
+	var ret Pack
 
 	var totalRecords int = 0
-	for _, r := range senml.Records {
+	for _, r := range p {
 		if (r.Value != nil) || (len(r.StringValue) > 0) || (len(r.DataValue) > 0) || (r.BoolValue != nil) {
 			totalRecords += 1
 		}
 	}
 
-	ret.XMLName = senml.XMLName
-	ret.Xmlns = senml.Xmlns
-	ret.Records = make([]SenMLRecord, totalRecords)
+	ret = make([]Record, totalRecords)
 	var numRecords = 0
 
-	for _, r := range senml.Records {
+	for _, r := range p {
 		if r.BaseTime != 0 {
 			btime = r.BaseTime
 		}
@@ -318,7 +314,7 @@ func Normalize(senml SenML) SenML {
 		}
 
 		if (r.Value != nil) || (len(r.StringValue) > 0) || (len(r.DataValue) > 0) || (r.BoolValue != nil) {
-			ret.Records[numRecords] = r
+			ret[numRecords] = r
 			numRecords += 1
 		}
 	}
@@ -326,14 +322,12 @@ func Normalize(senml SenML) SenML {
 	return ret
 }
 
-// Test if SenML is valid
-func IsValid(senml SenML) bool {
+// Validate test if SenML is valid
+func (p Pack) Validate() error {
 	var bname string = ""
 	var bver = -1
 
-	//fmt.Println("In Validate")
-
-	for _, r := range senml.Records {
+	for _, r := range p {
 
 		// Check version is same for all records
 		if bver == -1 {
@@ -345,8 +339,7 @@ func IsValid(senml SenML) bool {
 			if r.BaseVersion != 0 {
 				// next time a version in seen, check it has not changed
 				if r.BaseVersion != bver {
-					//fmt.Println("unallowed version change ")
-					return false
+					return fmt.Errorf("unallowed version change")
 				}
 			}
 		}
@@ -357,18 +350,14 @@ func IsValid(senml SenML) bool {
 		}
 		name := bname + r.Name
 		if len(name) == 0 {
-			//fmt.Println("empty name")
-
-			return false
+			return fmt.Errorf("empty name")
 		}
 		if (name[0] == '-') || (name[0] == ':') || (name[0] == '.') || (name[0] == '/') || (name[0] == '_') {
-			//fmt.Println("Bad first char in name")
-			return false
+			return fmt.Errorf("bad first char in name")
 		}
 		for _, l := range name {
 			if (l < 'a' || l > 'z') && (l < 'A' || l > 'Z') && (l < '0' || l > '9') && (l != '-') && (l != ':') && (l != '.') && (l != '/') && (l != '_') {
-				//fmt.Println("Bad char in name")
-				return false
+				return fmt.Errorf("bad char in name")
 			}
 		}
 
@@ -386,15 +375,13 @@ func IsValid(senml SenML) bool {
 			valueCount = valueCount + 1
 		}
 		if valueCount > 1 {
-			//fmt.Println("Too many values ")
-			return false
+			return fmt.Errorf("too many values")
 		}
 		if r.Sum != nil {
 			valueCount = valueCount + 1
 		}
 		if valueCount < 1 {
-			//fmt.Println("No value or sum")
-			return false
+			return fmt.Errorf("no value or sum")
 		}
 
 		// Check if name is known Mandatory To Understand
@@ -407,5 +394,5 @@ func IsValid(senml SenML) bool {
 		// }
 	}
 
-	return true
+	return nil
 }
