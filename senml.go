@@ -350,7 +350,7 @@ func (p Pack) Validate() error {
 			bname = r.BaseName
 		}
 		name := bname + r.Name
-		err := ValidateSenmlName(name)
+		err := ValidateName(name)
 
 		if err != nil {
 			return err
