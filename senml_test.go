@@ -226,6 +226,11 @@ func TestBadInputNumericBaseName(t *testing.T) {
 	if err == nil {
 		t.Fail()
 	}
+	data = []byte("[ { \"bn\": \"3h#\" , \"n\":\"i\" , \"v\":1.0} ] ")
+	_, err = Decode(data, JSON)
+	if err == nil {
+		t.Fail()
+	}
 }
 
 // TODO add

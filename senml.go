@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -349,16 +350,10 @@ func (p Pack) Validate() error {
 			bname = r.BaseName
 		}
 		name := bname + r.Name
-		if len(name) == 0 {
-			return fmt.Errorf("empty name")
-		}
-		if (name[0] == '-') || (name[0] == ':') || (name[0] == '.') || (name[0] == '/') || (name[0] == '_') {
-			return fmt.Errorf("bad first char in name")
-		}
-		for _, l := range name {
-			if (l < 'a' || l > 'z') && (l < 'A' || l > 'Z') && (l < '0' || l > '9') && (l != '-') && (l != ':') && (l != '.') && (l != '/') && (l != '_') {
-				return fmt.Errorf("bad char in name")
-			}
+		err := ValidateSenmlName(name)
+
+		if err != nil {
+			return err
 		}
 
 		valueCount := 0
@@ -394,5 +389,19 @@ func (p Pack) Validate() error {
 		// }
 	}
 
+	return nil
+}
+
+func ValidateSenmlName(name string) error {
+	if len(name) == 0 {
+		return fmt.Errorf("empty name")
+	}
+	validName, err := regexp.Compile(`^[a-zA-Z0-9]+[a-zA-Z0-9-:./_]*$`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	if !validName.MatchString(name) {
+		return fmt.Errorf("invalid name: can only contain alphanumeric,\"-\", \":\", \".\", \"/\",and \"_\". Also must begin with alphanumeric.")
+	}
 	return nil
 }
