@@ -392,7 +392,8 @@ func (p Pack) Validate() error {
 	return nil
 }
 
-func ValidateSenmlName(name string) error {
+// ValidateName validates the SenML name
+func ValidateName(name string) error {
 	if len(name) == 0 {
 		return fmt.Errorf("empty name")
 	}
@@ -401,7 +402,7 @@ func ValidateSenmlName(name string) error {
 		fmt.Println(err)
 	}
 	if !validName.MatchString(name) {
-		return fmt.Errorf("invalid name: can only contain alphanumeric,\"-\", \":\", \".\", \"/\",and \"_\". Also must begin with alphanumeric.")
+		return fmt.Errorf("invalid name: must begin with alphanumeric and contain alphanumeric or one of - : . / _")
 	}
 	return nil
 }
