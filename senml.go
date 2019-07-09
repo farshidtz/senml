@@ -13,8 +13,10 @@ import (
 	"github.com/ugorji/go/codec"
 )
 
+// Format is the SenML encoding/decoding format
 type Format int
 
+// Encoding/Decoding constants
 const (
 	JSON Format = 1 + iota
 	XML
@@ -25,6 +27,7 @@ const (
 	JSONLINE
 )
 
+// OutputOptions are encoding options
 type OutputOptions struct {
 	PrettyPrint bool
 	Topic       string
@@ -255,13 +258,13 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 
 // Normalize removes all the base items adds them to corresponding record fields. It converts relative times to absolute times.
 func (p Pack) Normalize() Pack {
-	var bname string = ""
-	var btime float64 = 0
-	var bunit string = ""
+	var bname string
+	var btime float64
+	var bunit string
 	var ver = 5
 	var ret Pack
 
-	var totalRecords int = 0
+	var totalRecords int
 	for _, r := range p {
 		if (r.Value != nil) || (len(r.StringValue) > 0) || (len(r.DataValue) > 0) || (r.BoolValue != nil) {
 			totalRecords += 1
@@ -269,7 +272,7 @@ func (p Pack) Normalize() Pack {
 	}
 
 	ret = make([]Record, totalRecords)
-	var numRecords = 0
+	var numRecords int
 
 	for _, r := range p {
 		if r.BaseTime != 0 {
@@ -311,7 +314,7 @@ func (p Pack) Normalize() Pack {
 
 // Validate tests if SenML is valid
 func (p Pack) Validate() error {
-	var bname string = ""
+	var bname string
 	var bver = -1
 
 	for _, r := range p {

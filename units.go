@@ -2,7 +2,6 @@ package senml
 
 // SenML Units Registry
 // https://tools.ietf.org/html/rfc8428#section-12.1
-
 const (
 	UnitMeter                   = "m"        // meter
 	UnitKilogram                = "k"        // kilogram

@@ -10,7 +10,7 @@ import (
 func ExampleEncode1() {
 	v := 23.1
 	var p Pack = []Record{
-		Record{Value: &v, Unit: "Cel", Name: "urn:dev:ow:10e2073a01080063"},
+		{Value: &v, Unit: "Cel", Name: "urn:dev:ow:10e2073a01080063"},
 	}
 
 	dataOut, err := p.Encode(JSON, OutputOptions{})
@@ -26,8 +26,8 @@ func ExampleEncode2() {
 	v1 := 23.5
 	v2 := 23.6
 	var p Pack = []Record{
-		Record{Value: &v1, Unit: "Cel", BaseName: "urn:dev:ow:10e2073a01080063", Time: 1.276020076305e+09},
-		Record{Value: &v2, Unit: "Cel", Time: 1.276020091305e+09},
+		{Value: &v1, Unit: "Cel", BaseName: "urn:dev:ow:10e2073a01080063", Time: 1.276020076305e+09},
+		{Value: &v2, Unit: "Cel", Time: 1.276020091305e+09},
 	}
 
 	dataOut, err := p.Encode(JSON, OutputOptions{})
@@ -60,14 +60,14 @@ func TestEncode(t *testing.T) {
 	sum := 0.0
 	vb := true
 	var pack Pack = []Record{
-		Record{BaseName: "dev123",
+		{BaseName: "dev123",
 			BaseTime:    -45.67,
 			BaseUnit:    "degC",
 			BaseVersion: 5,
 			Value:       &value, Unit: "degC", Name: "temp", Time: -1.0, UpdateTime: 10.0, Sum: &sum},
-		Record{StringValue: "kitchen", Name: "room", Time: -1.0},
-		Record{DataValue: "abc", Name: "data"},
-		Record{BoolValue: &vb, Name: "ok"},
+		{StringValue: "kitchen", Name: "room", Time: -1.0},
+		{DataValue: "abc", Name: "data"},
+		{BoolValue: &vb, Name: "ok"},
 	}
 
 	options := OutputOptions{Topic: "fluffySenml", PrettyPrint: false}
@@ -127,14 +127,14 @@ func TestNormalize(t *testing.T) {
 	sum := 0.0
 	vb := true
 	var pack Pack = []Record{
-		Record{BaseName: "dev123/",
+		{BaseName: "dev123/",
 			BaseTime:    897845.67,
 			BaseUnit:    "degC",
 			BaseVersion: 5,
 			Value:       &value, Unit: "degC", Name: "temp", Time: -1.0, UpdateTime: 10.0, Sum: &sum},
-		Record{StringValue: "kitchen", Name: "room", Time: -1.0},
-		Record{DataValue: "abc", Name: "data"},
-		Record{BoolValue: &vb, Name: "ok"},
+		{StringValue: "kitchen", Name: "room", Time: -1.0},
+		{DataValue: "abc", Name: "data"},
+		{BoolValue: &vb, Name: "ok"},
 	}
 
 	normalized := pack.Normalize()
