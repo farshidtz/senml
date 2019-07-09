@@ -176,9 +176,12 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 		}
 
 	case format == CSV:
+		// normalize first to add base values to record values
+		normalized := p.Normalize()
 		// output a CSV version
+		// format: name,excel-time,value(,unit)
 		var lines string
-		for _, r := range p {
+		for _, r := range normalized {
 			if r.Value != nil {
 				// TODO - replace sprintf with bytes.Buffer
 				lines += fmt.Sprintf("%s,", r.Name)

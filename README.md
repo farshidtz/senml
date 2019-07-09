@@ -49,6 +49,16 @@ func main() {
 	fmt.Printf("%s\n", xmlBytes)
 	/* Output:
 	<sensml xmlns="urn:ietf:params:xml:ns:senml"><senml bn="urn:dev:ow:10e2073a01080063" u="Cel" t="1.276020076305e+09" v="23.5"></senml><senml u="Cel" t="1.276020091305e+09" v="23.6"></senml></sensml>
+    */
+    
+	csvBytes, err := pack.Encode(senml.CSV, senml.OutputOptions{})
+	if err != nil {
+		panic(err) // don't panic, handle the error
+	}
+	fmt.Printf("%s\n", csvBytes)
+	/* Output:
+	urn:dev:ow:10e2073a01080063,40337.750883,23.500000,Cel
+	urn:dev:ow:10e2073a01080063,40337.751057,23.600000,Cel
 	*/
 }
 
