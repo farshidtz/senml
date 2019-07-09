@@ -146,7 +146,7 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 	switch {
 
 	case format == JSON:
-		// ouput JSON version
+		// output JSON version
 		if options.PrettyPrint {
 			// data, err = json.MarshalIndent(s.Records, "", "  ")
 			var lines string
@@ -191,7 +191,7 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 			if r.Value != nil {
 				// TODO - replace sprintf with bytes.Buffer
 				lines += fmt.Sprintf("%s,", r.Name)
-				// excell time in days since 1900, unix seconds since 1970
+				// excel time in days since 1900, unix seconds since 1970
 				// ( 1970 is 25569 days after 1900 )
 				lines += fmt.Sprintf("%f,", (r.Time/(24.0*3600.0))+25569.0)
 				lines += fmt.Sprintf("%f", *r.Value)
