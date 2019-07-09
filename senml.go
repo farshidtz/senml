@@ -63,32 +63,29 @@ type xmlPack struct {
 	XMLNS   string `xml:"xmlns,attr"`
 }
 
-// Decode takes a SenML message in the given format and parses it and decodes it
-//	into the returned SenML record.
+// Decode takes a SenML message in the given format, parses it and decodes it
+//	into the returned SenML pack.
 func Decode(msg []byte, format Format) (Pack, error) {
 	var p Pack
 	var err error
 
 	switch {
 	case format == JSON:
-		// parse the input JSON stream
+		// parse the input JSON object
 		err = json.Unmarshal(msg, &p)
 		if err != nil {
-			//fmt.Println("error parsing JSON SenML Stream: ", err)
-			//fmt.Println("msg=", msg)
 			return p, err
 		}
 
 	case format == JSONLINE:
-		// parse the input JSON line
+		// parse the input JSON lines
 		lines := strings.Split(string(msg), "\n")
 		for _, line := range lines {
 			r := new(Record)
 			if len(line) > 5 {
 				err = json.Unmarshal([]byte(line), r)
 				if err != nil {
-					//fmt.Println("error parsing JSON SenML Line: ", err)
-					return p, err
+					return p, fmt.Errorf("error parsing JSON line: %s", err)
 				}
 				p = append(p, *r)
 			}
@@ -99,7 +96,6 @@ func Decode(msg []byte, format Format) (Pack, error) {
 		var temp xmlPack
 		err = xml.Unmarshal(msg, &temp)
 		if err != nil {
-			//fmt.Println("error parsing XML SenML", err)
 			return nil, err
 		}
 		p = temp.Pack
@@ -110,8 +106,7 @@ func Decode(msg []byte, format Format) (Pack, error) {
 		var decoder *codec.Decoder = codec.NewDecoderBytes(msg, cborHandle)
 		err = decoder.Decode(&p)
 		if err != nil {
-			//fmt.Println("error parsing CBOR SenML", err)
-			return p, err
+			return p, fmt.Errorf("error parsing CBOR: %s", err)
 		}
 
 	case format == MPACK:
@@ -121,8 +116,7 @@ func Decode(msg []byte, format Format) (Pack, error) {
 		var decoder *codec.Decoder = codec.NewDecoderBytes(msg, mpackHandle)
 		err = decoder.Decode(&p)
 		if err != nil {
-			//fmt.Println("error parsing MPACK SenML", err)
-			return p, err
+			return p, fmt.Errorf("error parsing MPACK: %s", err)
 		}
 
 	}
@@ -148,7 +142,6 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 	case format == JSON:
 		// output JSON version
 		if options.PrettyPrint {
-			// data, err = json.MarshalIndent(s.Records, "", "  ")
 			var lines string
 			lines += fmt.Sprintf("[\n  ")
 			for i, r := range p {
@@ -157,7 +150,6 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 				}
 				recData, err := json.Marshal(r)
 				if err != nil {
-					//fmt.Println("error encoding JSON SenML", err)
 					return nil, err
 				}
 				lines += fmt.Sprintf("%s", recData)
@@ -180,7 +172,6 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 			data, err = xml.Marshal(&xmlPack)
 		}
 		if err != nil {
-			//fmt.Println("error encoding XML SenML", err)
 			return nil, err
 		}
 
@@ -202,10 +193,6 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 			}
 		}
 		data = []byte(lines)
-		if err != nil {
-			//fmt.Println("error encoding CSV SenML", err)
-			return nil, err
-		}
 
 	case format == CBOR:
 		// output a CBOR version
@@ -213,8 +200,7 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 		var encoder *codec.Encoder = codec.NewEncoderBytes(&data, cborHandle)
 		err = encoder.Encode(p)
 		if err != nil {
-			//fmt.Println("error encoding CBOR SenML", err)
-			return nil, err
+			return nil, fmt.Errorf("error encoding CBOR: %s", err)
 		}
 
 	case format == MPACK:
@@ -223,8 +209,7 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 		var encoder *codec.Encoder = codec.NewEncoderBytes(&data, mpackHandle)
 		err = encoder.Encode(p)
 		if err != nil {
-			//fmt.Println("error encoding MPACK SenML", err)
-			return nil, err
+			return nil, fmt.Errorf("error encoding MPACK: %s", err)
 		}
 
 	case format == LINEP:
@@ -253,8 +238,7 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 			if r.Value != nil {
 				data, err = json.Marshal(r)
 				if err != nil {
-					//fmt.Println("error encoding JSONLINE SenML", err)
-					return nil, err
+					return nil, fmt.Errorf("error encoding JSON line: %s", err)
 				}
 				buf.Write(data)
 				buf.WriteString("\n")
@@ -266,8 +250,7 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 	return data, nil
 }
 
-// Normalize removes all the base items and expands records to have items that include
-//	what previously in base items. Converts relative times to absolute times.
+// Normalize removes all the base items adds them to corresponding record fields. It converts relative times to absolute times.
 func (p Pack) Normalize() Pack {
 	var bname string = ""
 	var btime float64 = 0
@@ -323,7 +306,7 @@ func (p Pack) Normalize() Pack {
 	return ret
 }
 
-// Validate test if SenML is valid
+// Validate tests if SenML is valid
 func (p Pack) Validate() error {
 	var bname string = ""
 	var bver = -1
@@ -351,7 +334,6 @@ func (p Pack) Validate() error {
 		}
 		name := bname + r.Name
 		err := ValidateName(name)
-
 		if err != nil {
 			return err
 		}
