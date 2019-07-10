@@ -187,11 +187,7 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 		for _, r := range normalized {
 			if r.Value != nil {
 				// TODO - replace sprintf with bytes.Buffer
-				lines += fmt.Sprintf("%s,", r.Name)
-				// excel time in days since 1900, unix seconds since 1970
-				// ( 1970 is 25569 days after 1900 )
-				lines += fmt.Sprintf("%f,", (r.Time/(24.0*3600.0))+25569.0)
-				lines += fmt.Sprintf("%f", *r.Value)
+				lines += fmt.Sprintf("%s,%f,%f", r.Name, r.Time, *r.Value)
 				if len(r.Unit) > 0 {
 					lines += fmt.Sprintf(",%s", r.Unit)
 				}
