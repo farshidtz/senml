@@ -111,27 +111,54 @@ func TestEncode(t *testing.T) {
 }
 
 func TestDecode(t *testing.T) {
-	for i, vector := range testVectors {
-		t.Logf("Doing TestDecode for vector %d", i)
-
+	type pair struct {
+		got      interface{}
+		expected interface{}
+	}
+	ref := referencePack()
+	for _, vector := range testVectors {
 		if vector.testDecode {
 			data, err := base64.StdEncoding.DecodeString(vector.value)
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("Error decoding test value for %s: %s", vector.label, err)
 			}
 
-			t.Logf("%s", data)
 			pack, err := Decode(data, vector.format)
 			if err != nil {
-				t.Fatal(err)
+				t.Fatalf("Error decoding %s: %s", vector.label, err)
 			}
 
-			dataOut, err := pack.Encode(JSON, OutputOptions{PrettyPrint: true})
-			if err != nil {
-				t.Fatal(err)
+			pairs := make(map[string]pair)
+			for i := range pack {
+				pairs["XMLName"] = pair{pack[i].XMLName, ref[i].XMLName}
+				pairs["BaseName"] = pair{pack[i].BaseName, ref[i].BaseName}
+				pairs["BaseTime"] = pair{pack[i].BaseTime, ref[i].BaseTime}
+				pairs["BaseUnit"] = pair{pack[i].BaseUnit, ref[i].BaseUnit}
+				pairs["BaseVersion"] = pair{pack[i].BaseVersion, ref[i].BaseVersion}
+				pairs["Name"] = pair{pack[i].Name, ref[i].Name}
+				pairs["Unit"] = pair{pack[i].Unit, ref[i].Unit}
+				pairs["Time"] = pair{pack[i].Time, ref[i].Time}
+				pairs["UpdateTime"] = pair{pack[i].UpdateTime, ref[i].UpdateTime}
+				pairs["StringValue"] = pair{pack[i].StringValue, ref[i].StringValue}
+				pairs["DataValue"] = pair{pack[i].DataValue, ref[i].DataValue}
+				// pointers
+				if pack[i].Value != nil {
+					pairs["Value"] = pair{*pack[i].Value, *ref[i].Value}
+				}
+				if pack[i].BoolValue != nil {
+					pairs["BoolValue"] = pair{*pack[i].BoolValue, *ref[i].BoolValue}
+				}
+				if pack[i].Sum != nil {
+					pairs["Sum"] = pair{*pack[i].Sum, *ref[i].Sum}
+				}
+				// compare values
+				for fieldName, p := range pairs {
+					if p.got != p.expected {
+						t.Logf("Assertion failed for %s in encoded %s:", fieldName, vector.label)
+						t.Fatalf("Got: '%v' instead of: '%v'", p.got, p.expected)
+					}
+				}
 			}
-
-			t.Logf("Test Decode %d. Got:\n%s\n", i, string(dataOut))
 		}
 	}
 }
@@ -155,9 +182,8 @@ func TestNormalize(t *testing.T) {
 
 	dataOut, err := normalized.Encode(JSON, OutputOptions{PrettyPrint: true})
 	if err != nil {
-		t.Fail()
+		t.Fatalf("Error encoding: %s", err)
 	}
-	fmt.Println("Test Normalize got: " + string(dataOut))
 
 	testValue := "WwogIHsiYnZlciI6NSwibiI6ImRldjEyMy90ZW1wIiwidSI6ImRlZ0MiLCJ0Ijo4OTc4NDQuNjcsInV0IjoxMCwidiI6MjIuMSwicyI6MH0sCiAgeyJidmVyIjo1LCJuIjoiZGV2MTIzL3Jvb20iLCJ1IjoiZGVnQyIsInQiOjg5Nzg0NC42NywidnMiOiJraXRjaGVuIn0sCiAgeyJidmVyIjo1LCJuIjoiZGV2MTIzL2RhdGEiLCJ1IjoiZGVnQyIsInQiOjg5Nzg0NS42NywidmQiOiJhYmMifSwKICB7ImJ2ZXIiOjUsIm4iOiJkZXYxMjMvb2siLCJ1IjoiZGVnQyIsInQiOjg5Nzg0NS42NywidmIiOnRydWV9Cl0K"
 	if base64.StdEncoding.EncodeToString(dataOut) != testValue {
