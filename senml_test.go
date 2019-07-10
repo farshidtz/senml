@@ -3,7 +3,7 @@ package senml
 import (
 	"encoding/base64"
 	"fmt"
-	"strconv"
+
 	"testing"
 )
 
@@ -42,24 +42,25 @@ func ExampleEncode2() {
 type TestVector struct {
 	testDecode bool
 	format     Format
+	label      string
 	binary     bool
 	value      string
 }
 
 var testVectors = []TestVector{
-	{true, JSON, false, "W3siYm4iOiJkZXYxMjMiLCJidCI6LTQ1LjY3LCJidSI6ImRlZ0MiLCJidmVyIjo1LCJuIjoidGVtcCIsInUiOiJkZWdDIiwidCI6LTEsInV0IjoxMCwidiI6MjIuMSwicyI6MH0seyJuIjoicm9vbSIsInQiOi0xLCJ2cyI6ImtpdGNoZW4ifSx7Im4iOiJkYXRhIiwidmQiOiJhYmMifSx7Im4iOiJvayIsInZiIjp0cnVlfV0="},
-	{true, CBOR, true, "hKpiYm5mZGV2MTIzYmJ0+8BG1cKPXCj2YmJ1ZGRlZ0NkYnZlcgVhbmR0ZW1wYXP7AAAAAAAAAABhdPu/8AAAAAAAAGF1ZGRlZ0NidXT7QCQAAAAAAABhdvtANhmZmZmZmqNhbmRyb29tYXT7v/AAAAAAAABidnNna2l0Y2hlbqJhbmRkYXRhYnZkY2FiY6JhbmJva2J2YvU="},
-	{true, XML, false, "PHNlbnNtbCB4bWxucz0idXJuOmlldGY6cGFyYW1zOnhtbDpuczpzZW5tbCI+PHNlbm1sIGJuPSJkZXYxMjMiIGJ0PSItNDUuNjciIGJ1PSJkZWdDIiBidmVyPSI1IiBuPSJ0ZW1wIiB1PSJkZWdDIiB0PSItMSIgdXQ9IjEwIiB2PSIyMi4xIiBzPSIwIj48L3Nlbm1sPjxzZW5tbCBuPSJyb29tIiB0PSItMSIgdnM9ImtpdGNoZW4iPjwvc2VubWw+PHNlbm1sIG49ImRhdGEiIHZkPSJhYmMiPjwvc2VubWw+PHNlbm1sIG49Im9rIiB2Yj0idHJ1ZSI+PC9zZW5tbD48L3NlbnNtbD4="},
-	{false, CSV, false, "ZGV2MTIzdGVtcCwyNTU2OC45OTk5ODgsMjIuMTAwMDAwLGRlZ0M="},
-	{true, MPACK, true, "lIqiYm6mZGV2MTIzomJ0y8BG1cKPXCj2omJ1pGRlZ0OkYnZlcgWhbqR0ZW1woXPLAAAAAAAAAAChdMu/8AAAAAAAAKF1pGRlZ0OidXTLQCQAAAAAAAChdstANhmZmZmZmoOhbqRyb29toXTLv/AAAAAAAACidnOna2l0Y2hlboKhbqRkYXRhonZko2FiY4KhbqJva6J2YsM="},
-	{false, LINEP, false, "Zmx1ZmZ5U2VubWwsbj10ZW1wLHU9ZGVnQyB2PTIyLjEgLTEwMDAwMDAwMDAK"},
+	{true, JSON, "JSON", false, "W3siYm4iOiJkZXYxMjMiLCJidCI6LTQ1LjY3LCJidSI6ImRlZ0MiLCJidmVyIjo1LCJuIjoidGVtcCIsInUiOiJkZWdDIiwidCI6LTEsInV0IjoxMCwidiI6MjIuMSwicyI6MH0seyJuIjoicm9vbSIsInQiOi0xLCJ2cyI6ImtpdGNoZW4ifSx7Im4iOiJkYXRhIiwidmQiOiJhYmMifSx7Im4iOiJvayIsInZiIjp0cnVlfV0="},
+	{true, CBOR, "CBOR", true, "hKpiYm5mZGV2MTIzYmJ0+8BG1cKPXCj2YmJ1ZGRlZ0NkYnZlcgVhbmR0ZW1wYXP7AAAAAAAAAABhdPu/8AAAAAAAAGF1ZGRlZ0NidXT7QCQAAAAAAABhdvtANhmZmZmZmqNhbmRyb29tYXT7v/AAAAAAAABidnNna2l0Y2hlbqJhbmRkYXRhYnZkY2FiY6JhbmJva2J2YvU="},
+	{true, XML, "XML", false, "PHNlbnNtbCB4bWxucz0idXJuOmlldGY6cGFyYW1zOnhtbDpuczpzZW5tbCI+PHNlbm1sIGJuPSJkZXYxMjMiIGJ0PSItNDUuNjciIGJ1PSJkZWdDIiBidmVyPSI1IiBuPSJ0ZW1wIiB1PSJkZWdDIiB0PSItMSIgdXQ9IjEwIiB2PSIyMi4xIiBzPSIwIj48L3Nlbm1sPjxzZW5tbCBuPSJyb29tIiB0PSItMSIgdnM9ImtpdGNoZW4iPjwvc2VubWw+PHNlbm1sIG49ImRhdGEiIHZkPSJhYmMiPjwvc2VubWw+PHNlbm1sIG49Im9rIiB2Yj0idHJ1ZSI+PC9zZW5tbD48L3NlbnNtbD4="},
+	{false, CSV, "CSV", false, "ZGV2MTIzdGVtcCw5NDY2ODQ3OTkuMDAwMDAwLDIyLjEwMDAwMCxkZWdDDQo="},
+	{true, MPACK, "MPACK", true, "lIqiYm6mZGV2MTIzomJ0y8BG1cKPXCj2omJ1pGRlZ0OkYnZlcgWhbqR0ZW1woXPLAAAAAAAAAAChdMu/8AAAAAAAAKF1pGRlZ0OidXTLQCQAAAAAAAChdstANhmZmZmZmoOhbqRyb29toXTLv/AAAAAAAACidnOna2l0Y2hlboKhbqRkYXRhonZko2FiY4KhbqJva6J2YsM="},
+	{false, LINEP, "LINEP", false, "Zmx1ZmZ5U2VubWwsbj10ZW1wLHU9ZGVnQyB2PTIyLjEgLTEwMDAwMDAwMDAK"},
 }
 
-func TestEncode(t *testing.T) {
+func referencePack() Pack {
 	value := 22.1
 	sum := 0.0
 	vb := true
-	var pack Pack = []Record{
+	return Pack{
 		{BaseName: "dev123",
 			BaseTime:    -45.67,
 			BaseUnit:    "degC",
@@ -69,28 +70,41 @@ func TestEncode(t *testing.T) {
 		{DataValue: "abc", Name: "data"},
 		{BoolValue: &vb, Name: "ok"},
 	}
+}
+
+func TestEncode(t *testing.T) {
 
 	options := OutputOptions{Topic: "fluffySenml", PrettyPrint: false}
-	for i, vector := range testVectors {
-
-		dataOut, err := pack.Encode(vector.format, options)
-		if err != nil {
-			t.Fail()
+	for _, vector := range testVectors {
+		ref := referencePack()
+		if vector.label == "CSV" {
+			// change to an absolute time: https://tools.ietf.org/html/rfc8428#section-4.5.3
+			ref[0].BaseTime = 946684800
 		}
-		if vector.binary {
-			fmt.Print("Test Encode " + strconv.Itoa(i) + " got: ")
-			fmt.Println(dataOut)
-		} else {
-			fmt.Println("Test Encode " + strconv.Itoa(i) + " got: " + string(dataOut))
+		dataOut, err := ref.Encode(vector.format, options)
+		if err != nil {
+			t.Fatalf("Encoding error: %s", err)
 		}
 
 		if base64.StdEncoding.EncodeToString(dataOut) != vector.value {
-			t.Errorf("Failed Encode for format %d. Got:\n%s", i, string(dataOut))
-			decoded, err := base64.StdEncoding.DecodeString(vector.value)
-			if err != nil {
-				t.Fatalf("Error decoding test value: %s", err)
+			t.Errorf("Assertion failed for encoded %s:", vector.label)
+			// use this to compare with base64 test values
+			// t.Logf("Got (encoded): %s", base64.StdEncoding.EncodeToString(dataOut))
+			if !vector.binary {
+				t.Logf("Got:\n'%s'", dataOut)
+				decoded, err := base64.StdEncoding.DecodeString(vector.value)
+				if err != nil {
+					t.Fatalf("Error decoding test value: %s", err)
+				}
+				t.Fatalf("Expected:\n'%s'", decoded)
+			} else {
+				t.Logf("Got:\n%v", dataOut)
+				decoded, err := base64.StdEncoding.DecodeString(vector.value)
+				if err != nil {
+					t.Fatalf("Error decoding test value: %s", err)
+				}
+				t.Fatalf("Expected:\n%v", decoded)
 			}
-			t.Errorf("Expected:\n%s", string(decoded))
 		}
 	}
 
