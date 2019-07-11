@@ -271,6 +271,7 @@ func (p Pack) Normalize() Pack {
 	var numRecords int
 
 	var now = float64(time.Now().UnixNano()) / 1000000000
+	const pivot = 268435456 // rfc8428: values less than 2**28 represent time relative to the current time.
 	for _, r := range p {
 		if r.BaseTime != 0 {
 			btime = r.BaseTime
@@ -294,7 +295,7 @@ func (p Pack) Normalize() Pack {
 		}
 		r.BaseVersion = ver
 
-		if r.Time <= 0 {
+		if r.Time < pivot {
 			// convert to absolute time
 			r.Time = now + r.Time
 		}
