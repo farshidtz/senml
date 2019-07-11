@@ -263,13 +263,14 @@ func (p Pack) Normalize() Pack {
 	var totalRecords int
 	for _, r := range p {
 		if (r.Value != nil) || (len(r.StringValue) > 0) || (len(r.DataValue) > 0) || (r.BoolValue != nil) {
-			totalRecords += 1
+			totalRecords++
 		}
 	}
 
 	ret = make([]Record, totalRecords)
 	var numRecords int
 
+	var now = float64(time.Now().UnixNano()) / 1000000000
 	for _, r := range p {
 		if r.BaseTime != 0 {
 			btime = r.BaseTime
@@ -295,13 +296,12 @@ func (p Pack) Normalize() Pack {
 
 		if r.Time <= 0 {
 			// convert to absolute time
-			var now float64 = float64(time.Now().UnixNano()) / 1000000000
 			r.Time = now + r.Time
 		}
 
 		if (r.Value != nil) || (len(r.StringValue) > 0) || (len(r.DataValue) > 0) || (r.BoolValue != nil) {
 			ret[numRecords] = r
-			numRecords += 1
+			numRecords++
 		}
 	}
 
