@@ -3,6 +3,8 @@ package senml
 import (
 	"encoding/base64"
 	"fmt"
+	"math"
+	"time"
 
 	"testing"
 )
@@ -88,8 +90,7 @@ func TestEncode(t *testing.T) {
 
 		if base64.StdEncoding.EncodeToString(dataOut) != vector.value {
 			t.Errorf("Assertion failed for encoded %s:", vector.label)
-			// use this to compare with base64 test values
-			// t.Logf("Got (encoded): %s", base64.StdEncoding.EncodeToString(dataOut))
+			t.Logf("Got (encoded): %s", base64.StdEncoding.EncodeToString(dataOut))
 			if !vector.binary {
 				t.Logf("Got:\n'%s'", dataOut)
 				decoded, err := base64.StdEncoding.DecodeString(vector.value)
@@ -164,35 +165,43 @@ func TestDecode(t *testing.T) {
 }
 
 func TestNormalize(t *testing.T) {
-	value := 22.1
-	sum := 0.0
-	vb := true
-	var pack Pack = []Record{
-		{BaseName: "dev123/",
-			BaseTime:    897845.67,
-			BaseUnit:    "degC",
-			BaseVersion: 5,
-			Value:       &value, Unit: "degC", Name: "temp", Time: -1.0, UpdateTime: 10.0, Sum: &sum},
-		{StringValue: "kitchen", Name: "room", Time: -1.0},
-		{DataValue: "abc", Name: "data"},
-		{BoolValue: &vb, Name: "ok"},
+	ref := referencePack()
+
+	// positive relative time
+	ref[0].BaseTime = 1000
+	normalized := ref.Normalize()
+	now := float64(time.Now().UnixNano()) / 1000000000
+	expected := now + ref[0].BaseTime
+	if math.Abs(normalized[0].Time-expected) > 5 { // fail if difference is more than 5s
+		t.Fatalf("Time is not relative. Got %f instead of %f", ref[0].Time, expected)
 	}
 
-	normalized := pack.Normalize()
+	// negative relative time
+	ref[0].BaseTime = -1000
+	normalized = ref.Normalize()
+	now = float64(time.Now().UnixNano()) / 1000000000
+	expected = now + ref[0].BaseTime
+	if math.Abs(normalized[0].Time-expected) > 5 { // fail if difference is more than 5s
+		t.Fatalf("Time is not relative. Got %f instead of %f", ref[0].Time, expected)
+	}
 
+	// absolute time
+	ref[0].BaseTime = 946684800.123
+	normalized = ref.Normalize()
 	dataOut, err := normalized.Encode(JSON, OutputOptions{PrettyPrint: true})
 	if err != nil {
 		t.Fatalf("Error encoding: %s", err)
 	}
 
-	testValue := "WwogIHsiYnZlciI6NSwibiI6ImRldjEyMy90ZW1wIiwidSI6ImRlZ0MiLCJ0Ijo4OTc4NDQuNjcsInV0IjoxMCwidiI6MjIuMSwicyI6MH0sCiAgeyJidmVyIjo1LCJuIjoiZGV2MTIzL3Jvb20iLCJ1IjoiZGVnQyIsInQiOjg5Nzg0NC42NywidnMiOiJraXRjaGVuIn0sCiAgeyJidmVyIjo1LCJuIjoiZGV2MTIzL2RhdGEiLCJ1IjoiZGVnQyIsInQiOjg5Nzg0NS42NywidmQiOiJhYmMifSwKICB7ImJ2ZXIiOjUsIm4iOiJkZXYxMjMvb2siLCJ1IjoiZGVnQyIsInQiOjg5Nzg0NS42NywidmIiOnRydWV9Cl0K"
+	testValue := "WwogIHsiYnZlciI6NSwibiI6ImRldjEyM3RlbXAiLCJ1IjoiZGVnQyIsInQiOjk0NjY4NDc5OS4xMjMsInV0IjoxMCwidiI6MjIuMSwicyI6MH0sCiAgeyJidmVyIjo1LCJuIjoiZGV2MTIzcm9vbSIsInUiOiJkZWdDIiwidCI6OTQ2Njg0Nzk5LjEyMywidnMiOiJraXRjaGVuIn0sCiAgeyJidmVyIjo1LCJuIjoiZGV2MTIzZGF0YSIsInUiOiJkZWdDIiwidCI6OTQ2Njg0ODAwLjEyMywidmQiOiJhYmMifSwKICB7ImJ2ZXIiOjUsIm4iOiJkZXYxMjNvayIsInUiOiJkZWdDIiwidCI6OTQ2Njg0ODAwLjEyMywidmIiOnRydWV9Cl0K"
 	if base64.StdEncoding.EncodeToString(dataOut) != testValue {
-		t.Errorf("Failed Normalize got:\n%v", string(dataOut))
+		t.Logf("Got (encoded): %s", base64.StdEncoding.EncodeToString(dataOut))
+		t.Errorf("Assertion failed for normalized pack. Got:\n'%s'", dataOut)
 		decoded, err := base64.StdEncoding.DecodeString(testValue)
 		if err != nil {
 			t.Fatalf("Error decoding test value: %s", err)
 		}
-		t.Errorf("Expected:\n%v", string(decoded))
+		t.Errorf("Expected:\n'%s'", decoded)
 	}
 }
 
