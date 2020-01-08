@@ -27,6 +27,8 @@ const (
 	JSONLINE
 )
 
+const DEFAULT_BASE_VERSION = 10
+
 // OutputOptions are encoding options
 type OutputOptions struct {
 	PrettyPrint bool
@@ -42,10 +44,11 @@ type Pack []Record
 type Record struct {
 	XMLName *bool `json:"_,omitempty" xml:"senml"`
 
-	BaseName    string  `json:"bn,omitempty"  xml:"bn,attr,omitempty"`
-	BaseTime    float64 `json:"bt,omitempty"  xml:"bt,attr,omitempty"`
-	BaseUnit    string  `json:"bu,omitempty"  xml:"bu,attr,omitempty"`
-	BaseVersion int     `json:"bver,omitempty"  xml:"bver,attr,omitempty"`
+	BaseName string  `json:"bn,omitempty"  xml:"bn,attr,omitempty"`
+	BaseTime float64 `json:"bt,omitempty"  xml:"bt,attr,omitempty"`
+	BaseUnit string  `json:"bu,omitempty"  xml:"bu,attr,omitempty"`
+	// BaseVersion is an optional positive integer and defaults to 10 if not present.
+	BaseVersion *int `json:"bver,omitempty"  xml:"bver,attr,omitempty"`
 
 	Name       string  `json:"n,omitempty"  xml:"n,attr,omitempty"`
 	Unit       string  `json:"u,omitempty"  xml:"u,attr,omitempty"`
@@ -253,13 +256,26 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 }
 
 // Normalize removes all the base items adds them to corresponding record fields. It converts relative times to absolute times.
+// Normalize must be called on a validated pack only. The Decode function performs this validation internally.
+// A SenML Record is referred to as "resolved" if it does not contain
+//   any base values, i.e., labels starting with the character "b", except
+//   for Base Version fields (see below), and has no relative times.  To
+//   resolve the Records, the applicable base values of the SenML Pack (if
+//   any) are applied to the Record.  That is, for the base values in the
+//   Record or before the Record in the Pack, Name and Base Name are
+//   concatenated, the Base Time is added to the time of the Record, the
+//   Base Unit is applied to the Record if it did not contain a Unit, etc.
+//   In addition, the Records need to be in chronological order in the
+//   Pack.
+//  Source: https://tools.ietf.org/html/rfc8428#section-4.6
 func (p Pack) Normalize() Pack {
 	var bname string
 	var btime float64
 	var bunit string
-	var ver = 5
+	var bver int
 	var ret Pack
 
+	// TODO: what is this for? A valid senml is guaranteed to have one type of value.
 	var totalRecords int
 	for _, r := range p {
 		if (r.Value != nil) || (len(r.StringValue) > 0) || (len(r.DataValue) > 0) || (r.BoolValue != nil) {
@@ -276,8 +292,17 @@ func (p Pack) Normalize() Pack {
 		if r.BaseTime != 0 {
 			btime = r.BaseTime
 		}
-		if r.BaseVersion != 0 {
-			ver = r.BaseVersion
+		// RFC8428: The Base Version field MUST NOT be present in resolved Records if the
+		//   SenML version defined in this document is used; otherwise, it MUST be
+		//   present in all the resolved SenML Records.
+		if r.BaseVersion == nil && bver != 0 {
+			r.BaseVersion = &bver
+		} else if r.BaseVersion != nil {
+			if *r.BaseVersion == DEFAULT_BASE_VERSION {
+				r.BaseVersion = nil
+			} else {
+				bver = *r.BaseVersion
+			}
 		}
 		if len(r.BaseUnit) > 0 {
 			bunit = r.BaseUnit
@@ -293,7 +318,7 @@ func (p Pack) Normalize() Pack {
 		if len(r.Unit) == 0 {
 			r.Unit = bunit
 		}
-		r.BaseVersion = ver
+		//r.BaseVersion = bver
 
 		if r.Time < pivot {
 			// convert to absolute time
@@ -312,20 +337,20 @@ func (p Pack) Normalize() Pack {
 // Validate tests if SenML is valid
 func (p Pack) Validate() error {
 	var bname string
-	var bver = -1
+	var bver = DEFAULT_BASE_VERSION
 
 	for _, r := range p {
 
 		// Check version is same for all records
-		if bver == -1 {
+		if bver == DEFAULT_BASE_VERSION {
 			// set the bver the first time it is seen
-			if r.BaseVersion != 0 {
-				bver = r.BaseVersion
+			if r.BaseVersion != nil && *r.BaseVersion != DEFAULT_BASE_VERSION {
+				bver = *r.BaseVersion
 			}
 		} else {
-			if r.BaseVersion != 0 {
+			if r.BaseVersion != nil && *r.BaseVersion != DEFAULT_BASE_VERSION {
 				// next time a version in seen, check it has not changed
-				if r.BaseVersion != bver {
+				if *r.BaseVersion != bver {
 					return fmt.Errorf("unallowed version change")
 				}
 			}

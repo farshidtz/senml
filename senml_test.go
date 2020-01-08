@@ -59,6 +59,7 @@ var testVectors = []TestVector{
 }
 
 func referencePack() Pack {
+	bver := 5
 	value := 22.1
 	sum := 0.0
 	vb := true
@@ -66,7 +67,7 @@ func referencePack() Pack {
 		{BaseName: "dev123",
 			BaseTime:    -45.67,
 			BaseUnit:    "degC",
-			BaseVersion: 5,
+			BaseVersion: &bver,
 			Value:       &value, Unit: "degC", Name: "temp", Time: -1.0, UpdateTime: 10.0, Sum: &sum},
 		{StringValue: "kitchen", Name: "room", Time: -1.0},
 		{DataValue: "abc", Name: "data"},
@@ -135,7 +136,6 @@ func TestDecode(t *testing.T) {
 				pairs["BaseName"] = pair{pack[i].BaseName, ref[i].BaseName}
 				pairs["BaseTime"] = pair{pack[i].BaseTime, ref[i].BaseTime}
 				pairs["BaseUnit"] = pair{pack[i].BaseUnit, ref[i].BaseUnit}
-				pairs["BaseVersion"] = pair{pack[i].BaseVersion, ref[i].BaseVersion}
 				pairs["Name"] = pair{pack[i].Name, ref[i].Name}
 				pairs["Unit"] = pair{pack[i].Unit, ref[i].Unit}
 				pairs["Time"] = pair{pack[i].Time, ref[i].Time}
@@ -143,6 +143,9 @@ func TestDecode(t *testing.T) {
 				pairs["StringValue"] = pair{pack[i].StringValue, ref[i].StringValue}
 				pairs["DataValue"] = pair{pack[i].DataValue, ref[i].DataValue}
 				// pointers
+				if pack[i].BaseVersion != nil {
+					pairs["Value"] = pair{*pack[i].BaseVersion, *ref[i].BaseVersion}
+				}
 				if pack[i].Value != nil {
 					pairs["Value"] = pair{*pack[i].Value, *ref[i].Value}
 				}
@@ -192,7 +195,6 @@ func TestNormalize(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error encoding: %s", err)
 	}
-
 	testValue := "WwogIHsiYnZlciI6NSwibiI6ImRldjEyM3RlbXAiLCJ1IjoiZGVnQyIsInQiOjk0NjY4NDc5OS4xMjMsInV0IjoxMCwidiI6MjIuMSwicyI6MH0sCiAgeyJidmVyIjo1LCJuIjoiZGV2MTIzcm9vbSIsInUiOiJkZWdDIiwidCI6OTQ2Njg0Nzk5LjEyMywidnMiOiJraXRjaGVuIn0sCiAgeyJidmVyIjo1LCJuIjoiZGV2MTIzZGF0YSIsInUiOiJkZWdDIiwidCI6OTQ2Njg0ODAwLjEyMywidmQiOiJhYmMifSwKICB7ImJ2ZXIiOjUsIm4iOiJkZXYxMjNvayIsInUiOiJkZWdDIiwidCI6OTQ2Njg0ODAwLjEyMywidmIiOnRydWV9Cl0K"
 	if base64.StdEncoding.EncodeToString(dataOut) != testValue {
 		t.Logf("Got (encoded): %s", base64.StdEncoding.EncodeToString(dataOut))
@@ -202,6 +204,47 @@ func TestNormalize(t *testing.T) {
 			t.Fatalf("Error decoding test value: %s", err)
 		}
 		t.Errorf("Expected:\n'%s'", decoded)
+	}
+
+	// default base version in first record
+	ref = referencePack()
+	*ref[0].BaseVersion = DEFAULT_BASE_VERSION
+	normalized = ref.Normalize()
+	for i, r := range normalized {
+		if r.BaseVersion != nil {
+			t.Errorf("Default base version was not omitted in record %d: %+v", i, normalized)
+		}
+	}
+	if t.Failed() {
+		t.FailNow()
+	}
+
+	// default base version in second record
+	ref = referencePack()
+	ref[0].BaseVersion = nil
+	ref[1].BaseVersion = new(int)
+	*ref[1].BaseVersion = DEFAULT_BASE_VERSION
+	normalized = ref.Normalize()
+	for i, r := range normalized {
+		if r.BaseVersion != nil {
+			t.Errorf("Default base version was not omitted in record %d: %+v", i, normalized)
+		}
+	}
+	if t.Failed() {
+		t.FailNow()
+	}
+
+	// no base version
+	ref = referencePack()
+	ref[0].BaseVersion = nil
+	normalized = ref.Normalize()
+	for i, r := range normalized {
+		if r.BaseVersion != nil {
+			t.Errorf("Default base version was not omitted in record %d: %+v", i, normalized)
+		}
+	}
+	if t.Failed() {
+		t.FailNow()
 	}
 }
 
