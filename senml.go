@@ -49,6 +49,10 @@ type Record struct {
 	BaseUnit string  `json:"bu,omitempty"  xml:"bu,attr,omitempty"`
 	// BaseVersion is an optional positive integer and defaults to 10 if not present.
 	BaseVersion *int `json:"bver,omitempty"  xml:"bver,attr,omitempty"`
+	// BaseValue is added to the value found in an entry, similar to BaseTime.
+	BaseValue *float64 `json:"bv,omitempty"  xml:"bv,attr,omitempty"`
+	// BaseSum is added to the sum found in an entry, similar to BaseTime.
+	BaseSum *float64 `json:"bs,omitempty"  xml:"bs,attr,omitempty"`
 
 	Name       string  `json:"n,omitempty"  xml:"n,attr,omitempty"`
 	Unit       string  `json:"u,omitempty"  xml:"u,attr,omitempty"`
@@ -273,6 +277,8 @@ func (p Pack) Normalize() Pack {
 	var btime float64
 	var bunit string
 	var bver int
+	var bvalue float64
+	var bsum float64
 	var ret Pack
 
 	// TODO: what is this for? A valid senml is guaranteed to have one type of value.
@@ -318,13 +324,35 @@ func (p Pack) Normalize() Pack {
 		if len(r.Unit) == 0 {
 			r.Unit = bunit
 		}
-		//r.BaseVersion = bver
 
 		if r.Time < pivot {
 			// convert to absolute time
 			r.Time = now + r.Time
 		}
 
+		if r.BaseValue != nil {
+			bvalue = *r.BaseValue
+			r.BaseValue = nil
+		}
+		if bvalue != 0 {
+			if r.Value == nil {
+				r.Value = new(float64)
+			}
+			*r.Value += bvalue
+		}
+
+		if r.BaseSum != nil {
+			bsum = *r.BaseSum
+			r.BaseSum = nil
+		}
+		if bsum != 0 {
+			if r.Sum == nil {
+				r.Sum = new(float64)
+			}
+			*r.Sum += bsum
+		}
+
+		// TODO: what is this for? A valid senml is guaranteed to have one type of value.
 		if (r.Value != nil) || (len(r.StringValue) > 0) || (len(r.DataValue) > 0) || (r.BoolValue != nil) {
 			ret[numRecords] = r
 			numRecords++
@@ -366,27 +394,33 @@ func (p Pack) Validate() error {
 			return err
 		}
 
-		valueCount := 0
-		if r.Value != nil {
-			valueCount = valueCount + 1
+		floatValueCount := 0
+		nonFloatValueCount := 0
+		if r.Value != nil || r.BaseValue != nil {
+			floatValueCount++
 		}
 		if r.BoolValue != nil {
-			valueCount = valueCount + 1
+			nonFloatValueCount++
 		}
 		if len(r.DataValue) > 0 {
-			valueCount = valueCount + 1
+			nonFloatValueCount++
 		}
 		if len(r.StringValue) > 0 {
-			valueCount = valueCount + 1
+			nonFloatValueCount++
 		}
-		if valueCount > 1 {
-			return fmt.Errorf("too many values")
+
+		if floatValueCount+nonFloatValueCount > 1 {
+			return fmt.Errorf("too many values in single record")
 		}
-		if r.Sum != nil {
-			valueCount = valueCount + 1
-		}
-		if valueCount < 1 {
-			return fmt.Errorf("no value or sum")
+
+		if nonFloatValueCount == 1 {
+			if r.Sum != nil || r.BaseSum != nil {
+				return fmt.Errorf("sum together with non-float value in a single record")
+			}
+		} else {
+			if floatValueCount == 0 && r.Sum == nil && r.BaseSum == nil {
+				return fmt.Errorf("no value or sum")
+			}
 		}
 
 		// Check if name is known Mandatory To Understand
