@@ -184,30 +184,32 @@ func TestDecode(t *testing.T) {
 }
 
 func TestNormalize(t *testing.T) {
-	ref := referencePack()
 
 	// positive relative time
-	ref[0].BaseTime = 1000
-	normalized := ref.Normalize()
+	p := referencePack()
+	p[0].BaseTime = 1000
+	p.Normalize()
 	now := float64(time.Now().UnixNano()) / 1000000000
-	expected := now + ref[0].BaseTime
-	if math.Abs(normalized[0].Time-expected) > 5 { // fail if difference is more than 5s
-		t.Fatalf("Time is not absolute. Got %f instead of %f", ref[0].Time, expected)
+	expected := now + 1000
+	if math.Abs(p[0].Time-expected) > 5 { // fail if difference is more than 5s
+		t.Fatalf("Time is not absolute. Got %f instead of %f", p[0].Time, expected)
 	}
 
 	// negative relative time
-	ref[0].BaseTime = -1000
-	normalized = ref.Normalize()
+	p = referencePack()
+	p[0].BaseTime = -1000
+	p.Normalize()
 	now = float64(time.Now().UnixNano()) / 1000000000
-	expected = now + ref[0].BaseTime
-	if math.Abs(normalized[0].Time-expected) > 5 { // fail if difference is more than 5s
-		t.Fatalf("Time is not absolute. Got %f instead of %f", ref[0].Time, expected)
+	expected = now - 1000
+	if math.Abs(p[0].Time-expected) > 5 { // fail if difference is more than 5s
+		t.Fatalf("Time is not absolute. Got %f instead of %f", p[0].Time, expected)
 	}
 
 	// absolute time
-	ref[0].BaseTime = 946684800.123
-	normalized = ref.Normalize()
-	dataOut, err := normalized.Encode(JSON, OutputOptions{PrettyPrint: true})
+	p = referencePack()
+	p[0].BaseTime = 946684800.123
+	p.Normalize()
+	dataOut, err := p.Encode(JSON, OutputOptions{PrettyPrint: true})
 	if err != nil {
 		t.Fatalf("Error encoding: %s", err)
 	}
@@ -223,12 +225,12 @@ func TestNormalize(t *testing.T) {
 	}
 
 	// default base version in first record
-	ref = referencePack()
-	*ref[0].BaseVersion = DEFAULT_BASE_VERSION
-	normalized = ref.Normalize()
-	for i, r := range normalized {
+	p = referencePack()
+	*p[0].BaseVersion = DEFAULT_BASE_VERSION
+	p.Normalize()
+	for i, r := range p {
 		if r.BaseVersion != nil {
-			t.Errorf("Default base version was not omitted in record %d: %+v", i, normalized)
+			t.Errorf("Default base version was not omitted in record %d: %+v", i, p)
 		}
 	}
 	if t.Failed() {
@@ -236,14 +238,14 @@ func TestNormalize(t *testing.T) {
 	}
 
 	// default base version in second record
-	ref = referencePack()
-	ref[0].BaseVersion = nil
-	ref[1].BaseVersion = new(int)
-	*ref[1].BaseVersion = DEFAULT_BASE_VERSION
-	normalized = ref.Normalize()
-	for i, r := range normalized {
+	p = referencePack()
+	p[0].BaseVersion = nil
+	p[1].BaseVersion = new(int)
+	*p[1].BaseVersion = DEFAULT_BASE_VERSION
+	p.Normalize()
+	for i, r := range p {
 		if r.BaseVersion != nil {
-			t.Errorf("Default base version was not omitted in record %d: %+v", i, normalized)
+			t.Errorf("Default base version was not omitted in record %d: %+v", i, p)
 		}
 	}
 	if t.Failed() {
@@ -251,12 +253,12 @@ func TestNormalize(t *testing.T) {
 	}
 
 	// no base version
-	ref = referencePack()
-	ref[0].BaseVersion = nil
-	normalized = ref.Normalize()
-	for i, r := range normalized {
+	p = referencePack()
+	p[0].BaseVersion = nil
+	p.Normalize()
+	for i, r := range p {
 		if r.BaseVersion != nil {
-			t.Errorf("Default base version was not omitted in record %d: %+v", i, normalized)
+			t.Errorf("Default base version was not omitted in record %d: %+v", i, p)
 		}
 	}
 	if t.Failed() {
@@ -264,61 +266,82 @@ func TestNormalize(t *testing.T) {
 	}
 
 	// floats pack with base value
-	ref = referencePackFloats()
-	ref[0].Value = nil
-	ref[1].Value = nil
-	ref[0].BaseValue = new(float64)
-	*ref[0].BaseValue = 10
-	normalized = ref.Normalize()
-	if *normalized[0].Value != 10 && *normalized[1].Value != 10 {
-		t.Fatalf("Base value was not added to value in records. Got values: %f, %f", *normalized[0].Value, *normalized[1].Value)
+	p = referencePackFloats()
+	p[0].Value = nil
+	p[1].Value = nil
+	p[0].BaseValue = new(float64)
+	*p[0].BaseValue = 10
+	p.Normalize()
+	if *p[0].Value != 10 && *p[1].Value != 10 {
+		t.Fatalf("Base value was not added to value in records. Got values: %f, %f", *p[0].Value, *p[1].Value)
 	}
-	if normalized[0].BaseValue != nil {
-		t.Fatalf("Base value was not removed from record: %+v", normalized[0])
+	if p[0].BaseValue != nil {
+		t.Fatalf("Base value was not removed from record: %+v", p[0])
 	}
 
 	// floats pack with base value and values
-	ref = referencePackFloats()
-	ref[0].BaseValue = new(float64)
-	*ref[0].BaseValue = 10
-	normalized = ref.Normalize()
-	if *normalized[0].Value != 32.1 {
-		t.Fatalf("Base value was not added to value in first record. Got value: %f", *normalized[0].Value)
+	p = referencePackFloats()
+	p[0].BaseValue = new(float64)
+	*p[0].BaseValue = 10
+	p.Normalize()
+	if *p[0].Value != 32.1 {
+		t.Fatalf("Base value was not added to value in first record. Got value: %f", *p[0].Value)
 	}
-	if normalized[0].BaseValue != nil {
-		t.Fatalf("Base value was not removed from record: %+v", normalized[0])
+	if p[0].BaseValue != nil {
+		t.Fatalf("Base value was not removed from record: %+v", p[0])
 	}
-	if *normalized[1].Value != 40 {
-		t.Fatalf("Base value was not added to value in second record. Got value: %f", *normalized[1].Value)
+	if *p[1].Value != 40 {
+		t.Fatalf("Base value was not added to value in second record. Got value: %f", *p[1].Value)
 	}
 
 	// floats pack with base sum
-	ref = referencePackFloats()
-	ref[0].Sum = nil
-	ref[1].Sum = nil
-	ref[0].BaseSum = new(float64)
-	*ref[0].BaseSum = 10
-	normalized = ref.Normalize()
-	if *normalized[0].Sum != 10 && *normalized[1].Sum != 10 {
-		t.Fatalf("Base sum was not added to sum in records. Got sums: %f, %f", *normalized[0].Sum, *normalized[1].Sum)
+	p = referencePackFloats()
+	p[0].Sum = nil
+	p[1].Sum = nil
+	p[0].BaseSum = new(float64)
+	*p[0].BaseSum = 10
+	p.Normalize()
+	if *p[0].Sum != 10 && *p[1].Sum != 10 {
+		t.Fatalf("Base sum was not added to sum in records. Got sums: %f, %f", *p[0].Sum, *p[1].Sum)
 	}
-	if normalized[0].BaseSum != nil {
-		t.Fatalf("Base sum was not removed from record: %+v", normalized[0])
+	if p[0].BaseSum != nil {
+		t.Fatalf("Base sum was not removed from record: %+v", p[0])
 	}
 
 	// floats pack with base sum and sums
-	ref = referencePackFloats()
-	ref[0].BaseSum = new(float64)
-	*ref[0].BaseSum = 10
-	normalized = ref.Normalize()
-	if *normalized[0].Sum != 110 {
-		t.Fatalf("Base sum was not added to sum in first record. Got sum: %f", *normalized[0].Sum)
+	p = referencePackFloats()
+	p[0].BaseSum = new(float64)
+	*p[0].BaseSum = 10
+	p.Normalize()
+	if *p[0].Sum != 110 {
+		t.Fatalf("Base sum was not added to sum in first record. Got sum: %f", *p[0].Sum)
 	}
-	if normalized[0].BaseSum != nil {
-		t.Fatalf("Base sum was not removed from record: %+v", normalized[0])
+	if p[0].BaseSum != nil {
+		t.Fatalf("Base sum was not removed from record: %+v", p[0])
 	}
-	if *normalized[1].Sum != 210 {
-		t.Fatalf("Base sum was not added to sum in second record. Got sum: %f", *normalized[1].Sum)
+	if *p[1].Sum != 210 {
+		t.Fatalf("Base sum was not added to sum in second record. Got sum: %f", *p[1].Sum)
+	}
+}
+
+func TestClone(t *testing.T) {
+	p := referencePack()
+	p[0].XMLName = new(bool)
+
+	c := p.Clone()
+
+	*p[0].XMLName = true
+	*p[0].Value = 123.456
+	*p[0].BaseVersion = 123
+	p[0].Time = 123
+	p[0].StringValue = "changed"
+
+	if *p[0].XMLName == *c[0].XMLName ||
+		*p[0].Value == *c[0].Value ||
+		*p[0].BaseVersion == *c[0].BaseVersion ||
+		p[0].Time == c[0].Time ||
+		p[0].StringValue == c[0].StringValue {
+		t.Fatalf("Clone is changed after changing the original pack.")
 	}
 }
 

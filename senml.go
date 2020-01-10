@@ -139,6 +139,7 @@ func Decode(msg []byte, format Format) (Pack, error) {
 }
 
 // Encode takes a SenML record, and encodes it using the given format.
+// For CSV, the pack is first normalized to add base values to records
 func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 	var data []byte
 	var err error
@@ -187,11 +188,11 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 
 	case format == CSV:
 		// normalize first to add base values to record values
-		normalized := p.Normalize()
+		p.Normalize()
 		// output a CSV version
 		// format: name,excel-time,value(,unit)
 		var lines string
-		for _, r := range normalized {
+		for _, r := range p {
 			if r.Value != nil {
 				// TODO - replace sprintf with bytes.Buffer
 				lines += fmt.Sprintf("%s,%f,%f", r.Name, r.Time, *r.Value)
@@ -272,7 +273,7 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 //   In addition, the Records need to be in chronological order in the
 //   Pack.
 //  Source: https://tools.ietf.org/html/rfc8428#section-4.6
-func (p Pack) Normalize() Pack {
+func (p Pack) Normalize() {
 	var bname string
 	var btime float64
 	var bunit string
@@ -280,11 +281,11 @@ func (p Pack) Normalize() Pack {
 	var bvalue float64
 	var bsum float64
 
-	ret := make(Pack, len(p))
-
 	var now = float64(time.Now().UnixNano()) / 1000000000
 	const pivot = 268435456 // rfc8428: values less than 2**28 represent time relative to the current time.
-	for i, r := range p {
+	var r *Record
+	for i := range p {
+		r = &p[i]
 		if r.BaseTime != 0 {
 			btime = r.BaseTime
 		}
@@ -341,11 +342,60 @@ func (p Pack) Normalize() Pack {
 			}
 			*r.Sum += bsum
 		}
-
-		ret[i] = r
 	}
 
-	return ret
+	return
+}
+
+// Clone returns a deep copy of p
+func (p Pack) Clone() (clone Pack) {
+	cloneBool := func(b *bool) *bool {
+		if b != nil {
+			clone := new(bool)
+			*clone = *b
+			return clone
+		}
+		return nil
+	}
+	cloneInt := func(i *int) *int {
+		if i != nil {
+			clone := new(int)
+			*clone = *i
+			return clone
+		}
+		return nil
+	}
+	cloneFloat64 := func(f *float64) *float64 {
+		if f != nil {
+			clone := new(float64)
+			*clone = *f
+			return clone
+		}
+		return nil
+	}
+	clone = make(Pack, len(p))
+	for i := range p {
+		clone[i] = Record{
+			XMLName:     cloneBool(p[i].XMLName),
+			BaseName:    p[i].BaseName,
+			BaseTime:    p[i].BaseTime,
+			BaseUnit:    p[i].BaseUnit,
+			BaseVersion: cloneInt(p[i].BaseVersion),
+			BaseValue:   cloneFloat64(p[i].BaseValue),
+			BaseSum:     cloneFloat64(p[i].BaseSum),
+			Name:        p[i].Name,
+			Unit:        p[i].Unit,
+			Time:        p[i].Time,
+			UpdateTime:  p[i].UpdateTime,
+			Value:       cloneFloat64(p[i].Value),
+			StringValue: p[i].StringValue,
+			DataValue:   p[i].DataValue,
+			BoolValue:   cloneBool(p[i].BoolValue),
+			Sum:         cloneFloat64(p[i].Sum),
+		}
+	}
+
+	return clone
 }
 
 // Validate tests if SenML is valid
