@@ -279,22 +279,12 @@ func (p Pack) Normalize() Pack {
 	var bver int
 	var bvalue float64
 	var bsum float64
-	var ret Pack
 
-	// TODO: what is this for? A valid senml is guaranteed to have one type of value.
-	var totalRecords int
-	for _, r := range p {
-		if (r.Value != nil) || (len(r.StringValue) > 0) || (len(r.DataValue) > 0) || (r.BoolValue != nil) {
-			totalRecords++
-		}
-	}
-
-	ret = make([]Record, totalRecords)
-	var numRecords int
+	ret := make(Pack, len(p))
 
 	var now = float64(time.Now().UnixNano()) / 1000000000
 	const pivot = 268435456 // rfc8428: values less than 2**28 represent time relative to the current time.
-	for _, r := range p {
+	for i, r := range p {
 		if r.BaseTime != 0 {
 			btime = r.BaseTime
 		}
@@ -352,11 +342,7 @@ func (p Pack) Normalize() Pack {
 			*r.Sum += bsum
 		}
 
-		// TODO: what is this for? A valid senml is guaranteed to have one type of value.
-		if (r.Value != nil) || (len(r.StringValue) > 0) || (len(r.DataValue) > 0) || (r.BoolValue != nil) {
-			ret[numRecords] = r
-			numRecords++
-		}
+		ret[i] = r
 	}
 
 	return ret

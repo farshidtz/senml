@@ -75,39 +75,55 @@ func referencePack() Pack {
 	}
 }
 
+func referencePackFloats() Pack {
+	bver := 5
+	value, value2 := 22.1, 30.0
+	sum, sum2 := 100.0, 200.0
+	return Pack{
+		{BaseName: "dev123",
+			BaseTime:    -45.67,
+			BaseUnit:    "degC",
+			BaseVersion: &bver,
+			Value:       &value, Unit: "degC", Name: "temp", Time: -1.0, UpdateTime: 10.0, Sum: &sum},
+		{Value: &value2, Time: 1.0, Sum: &sum2},
+	}
+}
+
 func TestEncode(t *testing.T) {
 
 	options := OutputOptions{Topic: "fluffySenml", PrettyPrint: false}
 	for _, vector := range testVectors {
 		ref := referencePack()
-		if vector.label == "CSV" {
-			// change to an absolute time: https://tools.ietf.org/html/rfc8428#section-4.5.3
-			ref[0].BaseTime = 946684800
-		}
-		dataOut, err := ref.Encode(vector.format, options)
-		if err != nil {
-			t.Fatalf("Encoding error: %s", err)
-		}
-
-		if base64.StdEncoding.EncodeToString(dataOut) != vector.value {
-			t.Errorf("Assertion failed for encoded %s:", vector.label)
-			t.Logf("Got (encoded): %s", base64.StdEncoding.EncodeToString(dataOut))
-			if !vector.binary {
-				t.Logf("Got:\n'%s'", dataOut)
-				decoded, err := base64.StdEncoding.DecodeString(vector.value)
-				if err != nil {
-					t.Fatalf("Error decoding test value: %s", err)
-				}
-				t.Fatalf("Expected:\n'%s'", decoded)
-			} else {
-				t.Logf("Got:\n%v", dataOut)
-				decoded, err := base64.StdEncoding.DecodeString(vector.value)
-				if err != nil {
-					t.Fatalf("Error decoding test value: %s", err)
-				}
-				t.Fatalf("Expected:\n%v", decoded)
+		t.Run(vector.label, func(t *testing.T) {
+			if vector.label == "CSV" {
+				// change to an absolute time: https://tools.ietf.org/html/rfc8428#section-4.5.3
+				ref[0].BaseTime = 946684800
 			}
-		}
+			dataOut, err := ref.Encode(vector.format, options)
+			if err != nil {
+				t.Fatalf("Encoding error: %s", err)
+			}
+
+			if base64.StdEncoding.EncodeToString(dataOut) != vector.value {
+				t.Errorf("Assertion failed for encoded %s:", vector.label)
+				t.Logf("Got (encoded): %s", base64.StdEncoding.EncodeToString(dataOut))
+				if !vector.binary {
+					t.Logf("Got:\n'%s'", dataOut)
+					decoded, err := base64.StdEncoding.DecodeString(vector.value)
+					if err != nil {
+						t.Fatalf("Error decoding test value: %s", err)
+					}
+					t.Fatalf("Expected:\n'%s'", decoded)
+				} else {
+					t.Logf("Got:\n%v", dataOut)
+					decoded, err := base64.StdEncoding.DecodeString(vector.value)
+					if err != nil {
+						t.Fatalf("Error decoding test value: %s", err)
+					}
+					t.Fatalf("Expected:\n%v", decoded)
+				}
+			}
+		})
 	}
 
 }
@@ -176,7 +192,7 @@ func TestNormalize(t *testing.T) {
 	now := float64(time.Now().UnixNano()) / 1000000000
 	expected := now + ref[0].BaseTime
 	if math.Abs(normalized[0].Time-expected) > 5 { // fail if difference is more than 5s
-		t.Fatalf("Time is not relative. Got %f instead of %f", ref[0].Time, expected)
+		t.Fatalf("Time is not absolute. Got %f instead of %f", ref[0].Time, expected)
 	}
 
 	// negative relative time
@@ -185,7 +201,7 @@ func TestNormalize(t *testing.T) {
 	now = float64(time.Now().UnixNano()) / 1000000000
 	expected = now + ref[0].BaseTime
 	if math.Abs(normalized[0].Time-expected) > 5 { // fail if difference is more than 5s
-		t.Fatalf("Time is not relative. Got %f instead of %f", ref[0].Time, expected)
+		t.Fatalf("Time is not absolute. Got %f instead of %f", ref[0].Time, expected)
 	}
 
 	// absolute time
@@ -245,6 +261,64 @@ func TestNormalize(t *testing.T) {
 	}
 	if t.Failed() {
 		t.FailNow()
+	}
+
+	// floats pack with base value
+	ref = referencePackFloats()
+	ref[0].Value = nil
+	ref[1].Value = nil
+	ref[0].BaseValue = new(float64)
+	*ref[0].BaseValue = 10
+	normalized = ref.Normalize()
+	if *normalized[0].Value != 10 && *normalized[1].Value != 10 {
+		t.Fatalf("Base value was not added to value in records. Got values: %f, %f", *normalized[0].Value, *normalized[1].Value)
+	}
+	if normalized[0].BaseValue != nil {
+		t.Fatalf("Base value was not removed from record: %+v", normalized[0])
+	}
+
+	// floats pack with base value and values
+	ref = referencePackFloats()
+	ref[0].BaseValue = new(float64)
+	*ref[0].BaseValue = 10
+	normalized = ref.Normalize()
+	if *normalized[0].Value != 32.1 {
+		t.Fatalf("Base value was not added to value in first record. Got value: %f", *normalized[0].Value)
+	}
+	if normalized[0].BaseValue != nil {
+		t.Fatalf("Base value was not removed from record: %+v", normalized[0])
+	}
+	if *normalized[1].Value != 40 {
+		t.Fatalf("Base value was not added to value in second record. Got value: %f", *normalized[1].Value)
+	}
+
+	// floats pack with base sum
+	ref = referencePackFloats()
+	ref[0].Sum = nil
+	ref[1].Sum = nil
+	ref[0].BaseSum = new(float64)
+	*ref[0].BaseSum = 10
+	normalized = ref.Normalize()
+	if *normalized[0].Sum != 10 && *normalized[1].Sum != 10 {
+		t.Fatalf("Base sum was not added to sum in records. Got sums: %f, %f", *normalized[0].Sum, *normalized[1].Sum)
+	}
+	if normalized[0].BaseSum != nil {
+		t.Fatalf("Base sum was not removed from record: %+v", normalized[0])
+	}
+
+	// floats pack with base sum and sums
+	ref = referencePackFloats()
+	ref[0].BaseSum = new(float64)
+	*ref[0].BaseSum = 10
+	normalized = ref.Normalize()
+	if *normalized[0].Sum != 110 {
+		t.Fatalf("Base sum was not added to sum in first record. Got sum: %f", *normalized[0].Sum)
+	}
+	if normalized[0].BaseSum != nil {
+		t.Fatalf("Base sum was not removed from record: %+v", normalized[0])
+	}
+	if *normalized[1].Sum != 210 {
+		t.Fatalf("Base sum was not added to sum in second record. Got sum: %f", *normalized[1].Sum)
 	}
 }
 
