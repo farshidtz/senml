@@ -2,6 +2,7 @@ package senml
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"math"
 	"testing"
@@ -86,6 +87,11 @@ func referencePackFloats() Pack {
 			Value:       &value, Unit: "degC", Name: "temp", Time: -1.0, UpdateTime: 10.0, Sum: &sum},
 		{Value: &value2, Time: 1.0, Sum: &sum2},
 	}
+}
+
+func stringifyPack(p Pack) string {
+	b, _ := json.Marshal(&p)
+	return string(b)
 }
 
 func TestEncode(t *testing.T) {
@@ -201,109 +207,6 @@ func TestDecode(t *testing.T) {
 		}
 	})
 
-	t.Run("JSON no value", func(t *testing.T) {
-		data := []byte(`[{"n":"hi"}]`)
-		_, err := Decode(data, JSON)
-		if err == nil {
-			t.Fatalf("No error for record with no value")
-		}
-	})
-
-	t.Run("JSON numeric name", func(t *testing.T) {
-		data := []byte(`[{"n":"3a","v":1.0}]`)
-		_, err := Decode(data, JSON)
-		if err != nil {
-			t.Fatalf("Error decoding record with numeric name: %s", err)
-		}
-	})
-
-	t.Run("JSON bad numeric name", func(t *testing.T) {
-		data := []byte(`[{"n":"-3b","v":1.0}]`)
-		_, err := Decode(data, JSON)
-		if err == nil {
-			t.Fatalf("No error for bad numeric name in: %s", data)
-		}
-	})
-
-	t.Run("JSON weird name", func(t *testing.T) {
-		data := []byte(`[{"n":"Az3-:./_","v":1.0}]`)
-		_, err := Decode(data, JSON)
-		if err != nil {
-			t.Fatalf("Error decoding record with valid name: %s", err)
-		}
-	})
-
-	t.Run("JSON bad weird name", func(t *testing.T) {
-		data := []byte(`[{"n":"A;b","v":1.0}]`)
-		_, err := Decode(data, JSON)
-		if err == nil {
-			t.Fatalf("No error for invalid name in: %s", data)
-		}
-	})
-
-	t.Run("JSON weird base name", func(t *testing.T) {
-		data := []byte(`[{"bn":"Az3-:./_","n":"/b","v":1.0}]`)
-		_, err := Decode(data, JSON)
-		if err != nil {
-			t.Fatalf("Error decoding record with valid base name: %s", err)
-		}
-	})
-
-	t.Run("JSON bad numeric base name", func(t *testing.T) {
-		data := []byte(`[{"bn":"/3h","n":"i","v":1.0}]`)
-		_, err := Decode(data, JSON)
-		if err == nil {
-			t.Fatalf("No error for invalid numeric base name in: %s", data)
-		}
-
-		data = []byte(`[{"bn":"3h#","n":"i","v":1.0}]`)
-		_, err = Decode(data, JSON)
-		if err == nil {
-			t.Fatalf("No error for invalid numeric base name in: %s", data)
-		}
-	})
-
-	t.Run("JSON bad unknown MTU field", func(t *testing.T) {
-		t.Skip("TODO")
-		//data := []byte(`[{"n":"hi","v":1.0,"mtu_":1.0}]`)
-		//_, err := Decode(data, JSON)
-		//if err == nil {
-		//	t.Fatalf("No error for bad unknown MTU field in: %s", data)
-		//}
-	})
-
-	t.Run("JSON sum only", func(t *testing.T) {
-		data := []byte(`[{"n":"a","s":1.0}]`)
-		_, err := Decode(data, JSON)
-		if err != nil {
-			t.Fatalf("Error decoding record with sum only: %s", err)
-		}
-	})
-
-	t.Run("JSON boolean value", func(t *testing.T) {
-		data := []byte(`[{"n":"a","vb":true}]`)
-		_, err := Decode(data, JSON)
-		if err != nil {
-			t.Fatalf("Error decoding record with boolean value: %s", err)
-		}
-	})
-
-	t.Run("JSON data value", func(t *testing.T) {
-		data := []byte(`[{"n":"a","vd":"aGkgCg"}]`)
-		_, err := Decode(data, JSON)
-		if err != nil {
-			t.Fatalf("Error decoding record with data value: %s", err)
-		}
-	})
-
-	t.Run("JSON string value", func(t *testing.T) {
-		data := []byte(`[{"n":"a","vs":"Hi"}]`)
-		_, err := Decode(data, JSON)
-		if err != nil {
-			t.Fatalf("Error decoding record with string value: %s", err)
-		}
-	})
-
 }
 
 func TestNormalize(t *testing.T) {
@@ -357,7 +260,7 @@ func TestNormalize(t *testing.T) {
 		p.Normalize()
 		for i, r := range p {
 			if r.BaseVersion != nil {
-				t.Errorf("Default base version was not omitted in record %d: %+v", i, p)
+				t.Errorf("Default base version was not omitted in record %d: %s", i, stringifyPack(p))
 			}
 		}
 		if t.Failed() {
@@ -373,7 +276,7 @@ func TestNormalize(t *testing.T) {
 		p.Normalize()
 		for i, r := range p {
 			if r.BaseVersion != nil {
-				t.Errorf("Default base version was not omitted in record %d: %+v", i, p)
+				t.Errorf("Default base version was not omitted in record %d: %s", i, stringifyPack(p))
 			}
 		}
 		if t.Failed() {
@@ -387,7 +290,7 @@ func TestNormalize(t *testing.T) {
 		p.Normalize()
 		for i, r := range p {
 			if r.BaseVersion != nil {
-				t.Errorf("Default base version was not omitted in record %d: %+v", i, p)
+				t.Errorf("Default base version was not omitted in record %d: %s", i, stringifyPack(p))
 			}
 		}
 		if t.Failed() {
@@ -406,7 +309,7 @@ func TestNormalize(t *testing.T) {
 			t.Fatalf("Base value was not added to value in records. Got values: %f, %f", *p[0].Value, *p[1].Value)
 		}
 		if p[0].BaseValue != nil {
-			t.Fatalf("Base value was not removed from record: %+v", p[0])
+			t.Fatalf("Base value was not removed from record in pack: %s", stringifyPack(p))
 		}
 	})
 
@@ -419,7 +322,7 @@ func TestNormalize(t *testing.T) {
 			t.Fatalf("Base value was not added to value in first record. Got value: %f", *p[0].Value)
 		}
 		if p[0].BaseValue != nil {
-			t.Fatalf("Base value was not removed from record: %+v", p[0])
+			t.Fatalf("Base value was not removed from record in pack: %s", stringifyPack(p))
 		}
 		if *p[1].Value != 40 {
 			t.Fatalf("Base value was not added to value in second record. Got value: %f", *p[1].Value)
@@ -437,7 +340,7 @@ func TestNormalize(t *testing.T) {
 			t.Fatalf("Base sum was not added to sum in records. Got sums: %f, %f", *p[0].Sum, *p[1].Sum)
 		}
 		if p[0].BaseSum != nil {
-			t.Fatalf("Base sum was not removed from record: %+v", p[0])
+			t.Fatalf("Base sum was not removed from record in pack: %s", stringifyPack(p))
 		}
 	})
 
@@ -450,12 +353,13 @@ func TestNormalize(t *testing.T) {
 			t.Fatalf("Base sum was not added to sum in first record. Got sum: %f", *p[0].Sum)
 		}
 		if p[0].BaseSum != nil {
-			t.Fatalf("Base sum was not removed from record: %+v", p[0])
+			t.Fatalf("Base sum was not removed from record in pack: %s", stringifyPack(p))
 		}
 		if *p[1].Sum != 210 {
 			t.Fatalf("Base sum was not added to sum in second record. Got sum: %f", *p[1].Sum)
 		}
 	})
+
 }
 
 func TestClone(t *testing.T) {
@@ -480,6 +384,98 @@ func TestClone(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
+
+	t.Run("no value", func(t *testing.T) {
+		pack := Pack{
+			{Name: "dev"},
+		}
+		err := pack.Validate()
+		if err == nil {
+			t.Fatalf("No error for record with no value: %s", stringifyPack(pack))
+		}
+	})
+
+	t.Run("numeric name", func(t *testing.T) {
+		value := 1.0
+		pack := Pack{
+			{Name: "3a", Value: &value},
+		}
+		err := pack.Validate()
+		if err != nil {
+			t.Fatalf("Error decoding record with numeric name: %s", err)
+		}
+	})
+
+	t.Run("bad numeric name", func(t *testing.T) {
+		value := 1.0
+		pack := Pack{
+			{Name: "-3a", Value: &value},
+		}
+		err := pack.Validate()
+		if err == nil {
+			t.Fatalf("No error for bad numeric name in: %s", stringifyPack(pack))
+		}
+	})
+
+	t.Run("weird name", func(t *testing.T) {
+		value := 1.0
+		pack := Pack{
+			{Name: "Az3-:./_", Value: &value},
+		}
+		err := pack.Validate()
+		if err != nil {
+			t.Fatalf("Error decoding record with valid name: %s", err)
+		}
+	})
+
+	t.Run("bad weird name", func(t *testing.T) {
+		value := 1.0
+		pack := Pack{
+			{Name: "A;b", Value: &value},
+		}
+		err := pack.Validate()
+		if err == nil {
+			t.Fatalf("No error for invalid name in: %s", stringifyPack(pack))
+		}
+	})
+
+	t.Run("weird base name", func(t *testing.T) {
+		value := 1.0
+		pack := Pack{
+			{BaseName: "Az3-:./_", Name: "/b", Value: &value},
+		}
+		err := pack.Validate()
+		if err != nil {
+			t.Fatalf("Error decoding record with valid base name: %s", err)
+		}
+	})
+
+	t.Run("bad numeric base name", func(t *testing.T) {
+		value := 1.0
+		pack := Pack{
+			{BaseName: "/room", Name: "/dev", Value: &value},
+		}
+		err := pack.Validate()
+		if err == nil {
+			t.Fatalf("No error for invalid numeric base name in: %s", stringifyPack(pack))
+		}
+		//
+		pack[0].BaseName = "room#3"
+		err = pack.Validate()
+		if err == nil {
+			t.Fatalf("No error for invalid numeric base name in: %s", stringifyPack(pack))
+		}
+	})
+
+	t.Run("bad unknown MTU field", func(t *testing.T) {
+		t.Skip("TODO")
+		//data := []byte(`[{"n":"hi","v":1.0,"mtu_":1.0}]`)
+		//_, err := Decode(data, JSON)
+		//if err == nil {
+		//	t.Fatalf("No error for bad unknown MTU field in: %s", data)
+		//}
+	})
+
 	t.Run("multiple values in record", func(t *testing.T) {
 		value := 1.0
 		pack := Pack{
@@ -487,7 +483,7 @@ func TestValidate(t *testing.T) {
 		}
 		err := pack.Validate()
 		if err == nil {
-			t.Fatalf("No error for multi-valued record in pack: %+v", pack)
+			t.Fatalf("No error for multi-valued record in pack: %s", stringifyPack(pack))
 		}
 	})
 
@@ -498,7 +494,7 @@ func TestValidate(t *testing.T) {
 		}
 		err := pack.Validate()
 		if err == nil {
-			t.Fatalf("No error for record with base value (float) and another non-float value in pack: %+v", pack)
+			t.Fatalf("No error for record with base value (float) and another non-float value in pack: %s", stringifyPack(pack))
 		}
 	})
 
@@ -511,7 +507,7 @@ func TestValidate(t *testing.T) {
 		}
 		err := pack.Validate()
 		if err == nil {
-			t.Fatalf("No error for pack with no version followed by custom version: %+v", pack)
+			t.Fatalf("No error for pack with no version followed by custom version: %s", stringifyPack(pack))
 		}
 		//
 		bver_default := DEFAULT_BASE_VERSION
@@ -521,7 +517,7 @@ func TestValidate(t *testing.T) {
 		}
 		err = pack.Validate()
 		if err == nil {
-			t.Fatalf("No error for pack with no version followed by default version: %+v", pack)
+			t.Fatalf("No error for pack with no version followed by default version: %s", stringifyPack(pack))
 		}
 		pack = Pack{
 			{Name: "dev", Value: &value, BaseVersion: &bver_default},
@@ -529,7 +525,7 @@ func TestValidate(t *testing.T) {
 		}
 		err = pack.Validate()
 		if err == nil {
-			t.Fatalf("No error for pack with default followed by custom version: %+v", pack)
+			t.Fatalf("No error for pack with default followed by custom version: %s", stringifyPack(pack))
 		}
 		//
 		pack = Pack{
@@ -538,7 +534,7 @@ func TestValidate(t *testing.T) {
 		}
 		err = pack.Validate()
 		if err == nil {
-			t.Fatalf("No error for pack with custom followed by default version: %+v", pack)
+			t.Fatalf("No error for pack with custom followed by default version: %s", stringifyPack(pack))
 		}
 	})
 
