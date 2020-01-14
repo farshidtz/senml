@@ -44,26 +44,37 @@ type Pack []Record
 type Record struct {
 	XMLName *bool `json:"_,omitempty" xml:"senml"`
 
-	BaseName string  `json:"bn,omitempty"  xml:"bn,attr,omitempty"`
+	// BaseName is a string that is prepended to the names found in the entries.
+	BaseName string `json:"bn,omitempty"  xml:"bn,attr,omitempty"`
+	// BaseTime is added to the time found in an entry.
 	BaseTime float64 `json:"bt,omitempty"  xml:"bt,attr,omitempty"`
-	BaseUnit string  `json:"bu,omitempty"  xml:"bu,attr,omitempty"`
-	// BaseVersion is an optional positive integer and defaults to 10 if not present.
+	// BaseUnit is assumed for all entries, unless otherwise indicated.
+	BaseUnit string `json:"bu,omitempty"  xml:"bu,attr,omitempty"`
+	// BaseVersion is a positive integer and defaults to 10 if not present.
 	BaseVersion *int `json:"bver,omitempty"  xml:"bver,attr,omitempty"`
 	// BaseValue is added to the value found in an entry, similar to BaseTime.
 	BaseValue *float64 `json:"bv,omitempty"  xml:"bv,attr,omitempty"`
 	// BaseSum is added to the sum found in an entry, similar to BaseTime.
 	BaseSum *float64 `json:"bs,omitempty"  xml:"bs,attr,omitempty"`
 
-	Name       string  `json:"n,omitempty"  xml:"n,attr,omitempty"`
-	Unit       string  `json:"u,omitempty"  xml:"u,attr,omitempty"`
-	Time       float64 `json:"t,omitempty"  xml:"t,attr,omitempty"`
+	// Name of the sensor or parameter.
+	Name string `json:"n,omitempty"  xml:"n,attr,omitempty"`
+	// Unit for a measurement value.
+	Unit string `json:"u,omitempty"  xml:"u,attr,omitempty"`
+	// Time in seconds when the value was recorded.
+	Time float64 `json:"t,omitempty"  xml:"t,attr,omitempty"`
+	// UpdateTime is the maximum seconds before there is an updated reading for a measurement.
 	UpdateTime float64 `json:"ut,omitempty"  xml:"ut,attr,omitempty"`
 
-	Value       *float64 `json:"v,omitempty"  xml:"v,attr,omitempty"`
-	StringValue string   `json:"vs,omitempty"  xml:"vs,attr,omitempty"`
-	DataValue   string   `json:"vd,omitempty"  xml:"vd,attr,omitempty"`
-	BoolValue   *bool    `json:"vb,omitempty"  xml:"vb,attr,omitempty"`
-
+	// Value is the float value of the entry.
+	Value *float64 `json:"v,omitempty"  xml:"v,attr,omitempty"`
+	// StringValue is the string value of the entry.
+	StringValue string `json:"vs,omitempty"  xml:"vs,attr,omitempty"`
+	// DataValue is a base64-encoded string value of the entry with the URL-safe alphabet.
+	DataValue string `json:"vd,omitempty"  xml:"vd,attr,omitempty"`
+	// BoolValue is the boolean value of the entry.
+	BoolValue *bool `json:"vb,omitempty"  xml:"vb,attr,omitempty"`
+	// Sum is the integrated sum of the float values over time.
 	Sum *float64 `json:"s,omitempty"  xml:"s,attr,omitempty"`
 }
 
@@ -286,12 +297,19 @@ func (p Pack) Normalize() {
 	var r *Record
 	for i := range p {
 		r = &p[i]
+
+		// Time
 		if r.BaseTime != 0 {
 			btime = r.BaseTime
+			r.BaseTime = 0
 		}
-		// RFC8428: The Base Version field MUST NOT be present in resolved Records if the
-		//   SenML version defined in this document is used; otherwise, it MUST be
-		//   present in all the resolved SenML Records.
+		r.Time = btime + r.Time
+		if r.Time < pivot {
+			// convert to absolute time
+			r.Time = now + r.Time
+		}
+
+		// Version
 		if r.BaseVersion == nil && bver != 0 {
 			r.BaseVersion = &bver
 		} else if r.BaseVersion != nil {
@@ -301,26 +319,8 @@ func (p Pack) Normalize() {
 				bver = *r.BaseVersion
 			}
 		}
-		if len(r.BaseUnit) > 0 {
-			bunit = r.BaseUnit
-		}
-		if len(r.BaseName) > 0 {
-			bname = r.BaseName
-		}
-		r.BaseTime = 0
-		r.BaseUnit = ""
-		r.BaseName = ""
-		r.Name = bname + r.Name
-		r.Time = btime + r.Time
-		if len(r.Unit) == 0 {
-			r.Unit = bunit
-		}
 
-		if r.Time < pivot {
-			// convert to absolute time
-			r.Time = now + r.Time
-		}
-
+		// Value
 		if r.BaseValue != nil {
 			bvalue = *r.BaseValue
 			r.BaseValue = nil
@@ -332,6 +332,7 @@ func (p Pack) Normalize() {
 			*r.Value += bvalue
 		}
 
+		// Sum
 		if r.BaseSum != nil {
 			bsum = *r.BaseSum
 			r.BaseSum = nil
@@ -342,6 +343,22 @@ func (p Pack) Normalize() {
 			}
 			*r.Sum += bsum
 		}
+
+		// Unit
+		if len(r.BaseUnit) > 0 {
+			bunit = r.BaseUnit
+			r.BaseUnit = ""
+		}
+		if len(r.Unit) == 0 {
+			r.Unit = bunit
+		}
+
+		// Name
+		if len(r.BaseName) > 0 {
+			bname = r.BaseName
+			r.BaseName = ""
+		}
+		r.Name = bname + r.Name
 	}
 
 	return
@@ -404,7 +421,7 @@ func (p Pack) Validate() error {
 	var bver = -1
 
 	for _, r := range p {
-
+		// validate version
 		if r.BaseVersion == nil {
 			if bver == -1 {
 				bver = DEFAULT_BASE_VERSION
@@ -420,7 +437,7 @@ func (p Pack) Validate() error {
 			}
 		}
 
-		// Check name
+		// validate name
 		if len(r.BaseName) > 0 {
 			bname = r.BaseName
 		}
@@ -430,6 +447,7 @@ func (p Pack) Validate() error {
 			return err
 		}
 
+		// validate values
 		floatValueCount := 0
 		nonFloatValueCount := 0
 		if r.Value != nil || r.BaseValue != nil {
