@@ -142,10 +142,6 @@ func Decode(msg []byte, format Format) (Pack, error) {
 
 	}
 
-	if err := p.Validate(); err != nil {
-		return p, fmt.Errorf("invalid SenML Pack: %s", err)
-	}
-
 	return p, nil
 }
 
