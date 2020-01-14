@@ -4,9 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math"
-	"time"
-
 	"testing"
+	"time"
 )
 
 func ExampleEncode1() {
@@ -478,4 +477,147 @@ func TestClone(t *testing.T) {
 		p[0].StringValue == c[0].StringValue {
 		t.Fatalf("Clone is changed after changing the original pack.")
 	}
+}
+
+func TestValidate(t *testing.T) {
+	t.Run("multiple values in record", func(t *testing.T) {
+		value := 1.0
+		pack := Pack{
+			{Name: "dev", Value: &value, StringValue: "on"},
+		}
+		err := pack.Validate()
+		if err == nil {
+			t.Fatalf("No error for multi-valued record in pack: %+v", pack)
+		}
+	})
+
+	t.Run("base value with other types in pack", func(t *testing.T) {
+		bval := 1.0
+		pack := Pack{
+			{Name: "dev", BaseValue: &bval, StringValue: "on"},
+		}
+		err := pack.Validate()
+		if err == nil {
+			t.Fatalf("No error for record with base value (float) and another non-float value in pack: %+v", pack)
+		}
+	})
+
+	t.Run("multiple base versions in pack", func(t *testing.T) {
+		value := 1.0
+		bver := 5
+		pack := Pack{
+			{Name: "dev", Value: &value, BaseVersion: nil},
+			{Name: "dev", Value: &value, BaseVersion: &bver},
+		}
+		err := pack.Validate()
+		if err == nil {
+			t.Fatalf("No error for pack with no version followed by custom version: %+v", pack)
+		}
+		//
+		bver_default := DEFAULT_BASE_VERSION
+		pack = Pack{
+			{Name: "dev", Value: &value, BaseVersion: nil},
+			{Name: "dev", Value: &value, BaseVersion: &bver_default},
+		}
+		err = pack.Validate()
+		if err == nil {
+			t.Fatalf("No error for pack with no version followed by default version: %+v", pack)
+		}
+		pack = Pack{
+			{Name: "dev", Value: &value, BaseVersion: &bver_default},
+			{Name: "dev", Value: &value, BaseVersion: &bver},
+		}
+		err = pack.Validate()
+		if err == nil {
+			t.Fatalf("No error for pack with default followed by custom version: %+v", pack)
+		}
+		//
+		pack = Pack{
+			{Name: "dev", Value: &value, BaseVersion: &bver},
+			{Name: "dev", Value: &value, BaseVersion: &bver_default},
+		}
+		err = pack.Validate()
+		if err == nil {
+			t.Fatalf("No error for pack with custom followed by default version: %+v", pack)
+		}
+	})
+
+	t.Run("custom base version", func(t *testing.T) {
+		value := 1.0
+		bver := 5
+		pack := Pack{
+			{Name: "dev", Value: &value, BaseVersion: &bver},
+			{Name: "dev", Value: &value, BaseVersion: nil},
+		}
+		err := pack.Validate()
+		if err != nil {
+			t.Fatalf("Error for pack with custom followed by no version: %s", err)
+		}
+	})
+
+	t.Run("base value only", func(t *testing.T) {
+		bval := 1.0
+		pack := Pack{
+			{Name: "dev", BaseValue: &bval},
+		}
+		err := pack.Validate()
+		if err != nil {
+			t.Fatalf("Error for pack with base value: %s", err)
+		}
+	})
+
+	t.Run("sum only", func(t *testing.T) {
+		sum := 1.0
+		pack := Pack{
+			{Name: "dev", Sum: &sum},
+		}
+		err := pack.Validate()
+		if err != nil {
+			t.Fatalf("Error for pack with base sum: %s", err)
+		}
+	})
+
+	t.Run("base sum only", func(t *testing.T) {
+		bsum := 1.0
+		pack := Pack{
+			{Name: "dev", BaseSum: &bsum},
+		}
+		err := pack.Validate()
+		if err != nil {
+			t.Fatalf("Error for pack with base sum: %s", err)
+		}
+		//
+		sum := 10.0
+		pack = Pack{
+			{Name: "dev", BaseSum: &bsum},
+			{Name: "dev", Sum: &sum},
+		}
+		err = pack.Validate()
+		if err != nil {
+			t.Fatalf("Error for pack with base sum and sum: %s", err)
+		}
+	})
+}
+
+func TestValidateName(t *testing.T) {
+	t.Run("valid names", func(t *testing.T) {
+		names := []string{"Aa-:./_", "urn:dev:ow:10e2073a", "http://example.com"}
+		for _, name := range names {
+			err := ValidateName(name)
+			if err != nil {
+				t.Fatalf("Error for valid name: %s: %s", name, err)
+			}
+		}
+	})
+
+	t.Run("invalid names", func(t *testing.T) {
+		names := []string{"-A", ":A", ".A", "/A", "_A",
+			"~A", "!A", "@A", "#A", "$A", "%A", "^A", "&A", "*A", "(A", "+A", "=A", " A", " ", "A "}
+		for _, name := range names {
+			err := ValidateName(name)
+			if err == nil {
+				t.Fatalf("No error for invalid name: %s", name)
+			}
+		}
+	})
 }

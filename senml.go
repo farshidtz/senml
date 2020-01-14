@@ -401,22 +401,22 @@ func (p Pack) Clone() (clone Pack) {
 // Validate tests if SenML is valid
 func (p Pack) Validate() error {
 	var bname string
-	var bver = DEFAULT_BASE_VERSION
+	var bver = -1
 
 	for _, r := range p {
 
-		// Check version is same for all records
-		if bver == DEFAULT_BASE_VERSION {
-			// set the bver the first time it is seen
-			if r.BaseVersion != nil && *r.BaseVersion != DEFAULT_BASE_VERSION {
-				bver = *r.BaseVersion
+		if r.BaseVersion == nil {
+			if bver == -1 {
+				bver = DEFAULT_BASE_VERSION
 			}
 		} else {
-			if r.BaseVersion != nil && *r.BaseVersion != DEFAULT_BASE_VERSION {
-				// next time a version in seen, check it has not changed
-				if *r.BaseVersion != bver {
-					return fmt.Errorf("unallowed version change")
-				}
+			if *r.BaseVersion < 0 {
+				fmt.Errorf("negative base version")
+			}
+			if bver == -1 {
+				bver = *r.BaseVersion
+			} else {
+				return fmt.Errorf("unallowed version change")
 			}
 		}
 
