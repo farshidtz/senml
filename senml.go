@@ -84,8 +84,7 @@ type xmlPack struct {
 	XMLNS   string `xml:"xmlns,attr"`
 }
 
-// Decode takes a SenML message in the given format, parses it and decodes it
-//	into the returned SenML pack.
+// Decode takes a SenML pack in the given serialization format and decodes it into a Pack
 func Decode(msg []byte, format Format) (Pack, error) {
 	var p Pack
 	var err error
@@ -142,11 +141,22 @@ func Decode(msg []byte, format Format) (Pack, error) {
 
 	}
 
-	if err := p.Validate(); err != nil {
-		return p, fmt.Errorf("invalid SenML Pack: %s", err)
+	return p, nil
+}
+
+// DecodeAndValidate takes a SenML pack in the given serialization format and decodes it into a Pack which is then validated
+func DecodeAndValidate(msg []byte, format Format) (Pack, error) {
+	pack, err := Decode(msg, format)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding: %s", err)
 	}
 
-	return p, nil
+	err = pack.Validate()
+	if err != nil {
+		return nil, fmt.Errorf("invalid SenML pack: %s", err)
+	}
+
+	return pack, nil
 }
 
 // Encode takes a SenML record, and encodes it using the given format.
