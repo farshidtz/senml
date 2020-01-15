@@ -27,7 +27,7 @@ const (
 	JSONLINE
 )
 
-const DEFAULT_BASE_VERSION = 10
+const DefaultBaseVersion = 10
 
 // OutputOptions are encoding options
 type OutputOptions struct {
@@ -329,7 +329,7 @@ func (p Pack) Normalize() {
 		if r.BaseVersion == nil && bver != 0 {
 			r.BaseVersion = &bver
 		} else if r.BaseVersion != nil {
-			if *r.BaseVersion == DEFAULT_BASE_VERSION {
+			if *r.BaseVersion == DefaultBaseVersion {
 				r.BaseVersion = nil
 			} else {
 				bver = *r.BaseVersion
@@ -440,7 +440,7 @@ func (p Pack) Validate() error {
 		// validate version
 		if r.BaseVersion == nil {
 			if bver == -1 {
-				bver = DEFAULT_BASE_VERSION
+				bver = DefaultBaseVersion
 			}
 		} else {
 			if *r.BaseVersion < 0 {

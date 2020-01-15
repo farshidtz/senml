@@ -256,7 +256,7 @@ func TestNormalize(t *testing.T) {
 
 	t.Run("Default base version in first record", func(t *testing.T) {
 		p := referencePack()
-		*p[0].BaseVersion = DEFAULT_BASE_VERSION
+		*p[0].BaseVersion = DefaultBaseVersion
 		p.Normalize()
 		for i, r := range p {
 			if r.BaseVersion != nil {
@@ -272,7 +272,7 @@ func TestNormalize(t *testing.T) {
 		p := referencePack()
 		p[0].BaseVersion = nil
 		p[1].BaseVersion = new(int)
-		*p[1].BaseVersion = DEFAULT_BASE_VERSION
+		*p[1].BaseVersion = DefaultBaseVersion
 		p.Normalize()
 		for i, r := range p {
 			if r.BaseVersion != nil {
@@ -510,7 +510,7 @@ func TestValidate(t *testing.T) {
 			t.Fatalf("No error for pack with no version followed by custom version: %s", stringifyPack(pack))
 		}
 		//
-		bver_default := DEFAULT_BASE_VERSION
+		bver_default := DefaultBaseVersion
 		pack = Pack{
 			{Name: "dev", Value: &value, BaseVersion: nil},
 			{Name: "dev", Value: &value, BaseVersion: &bver_default},
