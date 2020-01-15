@@ -15,7 +15,7 @@ func ExampleEncode1() {
 		{Value: &v, Unit: "Cel", Name: "urn:dev:ow:10e2073a01080063"},
 	}
 
-	dataOut, err := p.Encode(JSON, OutputOptions{})
+	dataOut, err := p.Encode(JSON, nil)
 	if err != nil {
 		fmt.Println("Encode of SenML failed")
 	} else {
@@ -32,7 +32,7 @@ func ExampleEncode2() {
 		{Value: &v2, Unit: "Cel", Time: 1.276020091305e+09},
 	}
 
-	dataOut, err := p.Encode(JSON, OutputOptions{})
+	dataOut, err := p.Encode(JSON, nil)
 	if err != nil {
 		fmt.Println("Encode of SenML failed")
 	} else {
@@ -104,7 +104,7 @@ func TestEncode(t *testing.T) {
 				// change to an absolute time: https://tools.ietf.org/html/rfc8428#section-4.5.3
 				ref[0].BaseTime = 946684800
 			}
-			dataOut, err := ref.Encode(vector.format, options)
+			dataOut, err := ref.Encode(vector.format, &options)
 			if err != nil {
 				t.Fatalf("Encoding error: %s", err)
 			}
@@ -238,7 +238,7 @@ func TestNormalize(t *testing.T) {
 		p := referencePack()
 		p[0].BaseTime = 946684800.123
 		p.Normalize()
-		dataOut, err := p.Encode(JSON, OutputOptions{PrettyPrint: true})
+		dataOut, err := p.Encode(JSON, &OutputOptions{PrettyPrint: true})
 		if err != nil {
 			t.Fatalf("Error encoding: %s", err)
 		}

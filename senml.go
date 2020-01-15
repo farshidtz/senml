@@ -159,21 +159,28 @@ func DecodeAndValidate(msg []byte, format Format) (Pack, error) {
 	return pack, nil
 }
 
-// Encode takes a SenML record, and encodes it using the given format.
+// Encode serializes the SenML pack to the given format.
 // For CSV, the pack is first normalized to add base values to records
-func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
+func (p Pack) Encode(format Format, options *OutputOptions) ([]byte, error) {
 	var data []byte
 	var err error
 
-	if options.Topic == "" {
-		options.Topic = "senml"
+	// default options
+	prettyPrint := false
+	topic := "senml"
+
+	if options != nil {
+		prettyPrint = options.PrettyPrint
+		if options.Topic != "" {
+			topic = options.Topic
+		}
 	}
 
 	switch {
 
 	case format == JSON:
 		// output JSON version
-		if options.PrettyPrint {
+		if prettyPrint {
 			var lines string
 			lines += fmt.Sprintf("[\n  ")
 			for i, r := range p {
@@ -198,7 +205,7 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 			XMLNS: "urn:ietf:params:xml:ns:senml",
 		}
 		// output a XML version
-		if options.PrettyPrint {
+		if prettyPrint {
 			data, err = xml.MarshalIndent(&xmlPack, "", "  ")
 		} else {
 			data, err = xml.Marshal(&xmlPack)
@@ -248,7 +255,7 @@ func (p Pack) Encode(format Format, options OutputOptions) ([]byte, error) {
 		var buf bytes.Buffer
 		for _, r := range p {
 			if r.Value != nil {
-				buf.WriteString(options.Topic)
+				buf.WriteString(topic)
 				buf.WriteString(",n=")
 				buf.WriteString(r.Name)
 				buf.WriteString(",u=")
