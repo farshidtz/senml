@@ -181,20 +181,20 @@ func (p Pack) Encode(format Format, options *OutputOptions) ([]byte, error) {
 	case format == JSON:
 		// output JSON version
 		if prettyPrint {
-			var lines string
-			lines += fmt.Sprintf("[\n  ")
+			var buf bytes.Buffer
+			buf.WriteString("[\n  ")
 			for i, r := range p {
 				if i != 0 {
-					lines += ",\n  "
+					buf.WriteString(",\n  ")
 				}
 				recData, err := json.Marshal(r)
 				if err != nil {
 					return nil, err
 				}
-				lines += fmt.Sprintf("%s", recData)
+				buf.Write(recData)
 			}
-			lines += fmt.Sprintf("\n]\n")
-			data = []byte(lines)
+			buf.WriteString("\n]\n")
+			data = buf.Bytes()
 		} else {
 			return json.Marshal(p)
 		}
@@ -219,18 +219,17 @@ func (p Pack) Encode(format Format, options *OutputOptions) ([]byte, error) {
 		p.Normalize()
 		// output a CSV version
 		// format: name,excel-time,value(,unit)
-		var lines string
+		var buf bytes.Buffer
 		for _, r := range p {
 			if r.Value != nil {
-				// TODO - replace sprintf with bytes.Buffer
-				lines += fmt.Sprintf("%s,%f,%f", r.Name, r.Time, *r.Value)
+				fmt.Fprintf(&buf, "%s,%f,%f", r.Name, r.Time, *r.Value)
 				if len(r.Unit) > 0 {
-					lines += fmt.Sprintf(",%s", r.Unit)
+					buf.WriteString("," + r.Unit)
 				}
-				lines += fmt.Sprintf("\r\n")
+				buf.WriteString("\r\n")
 			}
 		}
-		data = []byte(lines)
+		data = buf.Bytes()
 
 	case format == CBOR:
 		// output a CBOR version
