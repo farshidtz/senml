@@ -3,10 +3,13 @@
 [![GoDoc](https://godoc.org/github.com/farshidtz/senml?status.svg)](https://godoc.org/github.com/farshidtz/senml)
 [![Build Status](https://travis-ci.org/farshidtz/senml.svg)](https://travis-ci.org/farshidtz/senml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/farshidtz/senml)](https://goreportcard.com/report/github.com/farshidtz/senml)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/farshidtz/senml?sort=semver&label=stable)
+![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/farshidtz/senml?include_prereleases&sort=semver&label=pre)
+
 
 SenML package is an implementation of [RFC8428](https://tools.ietf.org/html/rfc8428) - Sensor Measurement Lists (SenML) in Go.
 
-Note: This library is under development. Only use tagged commits for production.
+Note: The 2nd version of this library is under development.
 
 ## Install
 ```
@@ -32,7 +35,7 @@ func main() {
 	}
 
 	// encode to pretty JSON
-	senmlBytes, err := pack.Encode(senml.JSON, senml.OutputOptions{PrettyPrint: true})
+	senmlBytes, err := pack.Encode(senml.JSON, &senml.OutputOptions{PrettyPrint: true})
 	if err != nil {
 		panic(err) // don't panic, handle the error
 	}
@@ -45,7 +48,7 @@ func main() {
 	*/
 
 	// encode to XML
-	xmlBytes, err := pack.Encode(senml.XML, senml.OutputOptions{})
+	xmlBytes, err := pack.Encode(senml.XML, nil)
 	if err != nil {
 		panic(err) // don't panic, handle the error
 	}
@@ -55,7 +58,7 @@ func main() {
 	*/
 
 	// encode to CSV (format: name,excel-time,value,unit)
-	csvBytes, err := pack.Encode(senml.CSV, senml.OutputOptions{})
+	csvBytes, err := pack.Encode(senml.CSV, nil)
 	if err != nil {
 		panic(err) // don't panic, handle the error
 	}
