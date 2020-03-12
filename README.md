@@ -13,7 +13,7 @@ Note: The 2nd version of this library is under development.
 
 ## Install
 ```
-go get github.com/farshidtz/senml
+go get github.com/farshidtz/senml/v2
 ```
 
 ## Usage
@@ -22,7 +22,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/farshidtz/senml"
+	"github.com/farshidtz/senml/v2"
 )
 
 func main() {

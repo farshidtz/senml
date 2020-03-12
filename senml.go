@@ -78,13 +78,8 @@ type Record struct {
 	Sum *float64 `json:"s,omitempty"  xml:"s,attr,omitempty"`
 }
 
-type xmlPack struct {
-	Pack
-	XMLName *bool  `xml:"sensml"`
-	XMLNS   string `xml:"xmlns,attr"`
-}
-
 // Decode takes a SenML pack in the given serialization format and decodes it into a Pack
+// Deprecated: Use DecodeXXX functions
 func Decode(msg []byte, format Format) (Pack, error) {
 	var p Pack
 	var err error
@@ -145,6 +140,7 @@ func Decode(msg []byte, format Format) (Pack, error) {
 }
 
 // DecodeAndValidate takes a SenML pack in the given serialization format and decodes it into a Pack which is then validated
+// Deprecated: Decode and validate separately
 func DecodeAndValidate(msg []byte, format Format) (Pack, error) {
 	pack, err := Decode(msg, format)
 	if err != nil {
@@ -161,6 +157,7 @@ func DecodeAndValidate(msg []byte, format Format) (Pack, error) {
 
 // Encode serializes the SenML pack to the given format.
 // For CSV, the pack is first normalized to add base values to records
+// Deprecated: Use EncodeXXX functions
 func (p Pack) Encode(format Format, options *OutputOptions) ([]byte, error) {
 	var data []byte
 	var err error
