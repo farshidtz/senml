@@ -26,17 +26,23 @@ func (p Pack) WriteCSV(w io.Writer, header bool) error {
 	// normalize first to add base values to row values
 	p.Normalize()
 
-	row := make([]string, 9)
 	for i := range p {
-		row[0] = fmt.Sprintf("%f", p[i].Time)
+		row := make([]string, 9)
+		row[0] = strconv.FormatFloat(p[i].Time, 'f', -1, 64)
 		row[1] = p[i].Name
 		row[2] = p[i].Unit
-		row[3] = fmt.Sprintf("%f", *p[i].Value)
+		if p[i].Value != nil {
+			row[3] = strconv.FormatFloat(*p[i].Value, 'f', -1, 64)
+		}
 		row[4] = p[i].StringValue
-		row[5] = fmt.Sprintf("%t", *p[i].BoolValue)
+		if p[i].BoolValue != nil {
+			row[5] = fmt.Sprintf("%t", *p[i].BoolValue)
+		}
 		row[6] = p[i].DataValue
-		row[7] = fmt.Sprintf("%f", *p[i].Sum)
-		row[8] = fmt.Sprintf("%f", p[i].UpdateTime)
+		if p[i].Sum != nil {
+			row[7] = strconv.FormatFloat(*p[i].Sum, 'f', -1, 64)
+		}
+		row[8] = strconv.FormatFloat(p[i].UpdateTime, 'f', -1, 64)
 
 		err := csvWriter.Write(row)
 		if err != nil {
@@ -98,27 +104,33 @@ func ReadCSV(r io.Reader, header bool) (Pack, error) {
 		// Unit
 		record.Unit = row[2]
 		// Value
-		value, err := strconv.ParseFloat(row[3], 10)
-		if err != nil {
-			return nil, err
+		if row[3] != "" {
+			value, err := strconv.ParseFloat(row[3], 10)
+			if err != nil {
+				return nil, err
+			}
+			record.Value = &value
 		}
-		record.Value = &value
 		// String Value
 		record.StringValue = row[4]
 		// Boolean Value
-		boolValue, err := strconv.ParseBool(row[5])
-		if err != nil {
-			return nil, err
+		if row[5] != "" {
+			boolValue, err := strconv.ParseBool(row[5])
+			if err != nil {
+				return nil, err
+			}
+			record.BoolValue = &boolValue
 		}
-		record.BoolValue = &boolValue
 		// Data Value
 		record.DataValue = row[6]
 		// Sum
-		sum, err := strconv.ParseFloat(row[7], 10)
-		if err != nil {
-			return nil, err
+		if row[7] != "" {
+			sum, err := strconv.ParseFloat(row[7], 10)
+			if err != nil {
+				return nil, err
+			}
+			record.Sum = &sum
 		}
-		record.Sum = &sum
 		// Update Time
 		record.UpdateTime, err = strconv.ParseFloat(row[8], 10)
 		if err != nil {

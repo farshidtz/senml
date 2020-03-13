@@ -58,14 +58,20 @@ var testVectors = []TestVector{
 	{false, LINEP, "LINEP", false, "Zmx1ZmZ5U2VubWwsbj10ZW1wLHU9ZGVnQyB2PTIyLjEgLTEwMDAwMDAwMDAK"},
 }
 
-func referencePack() Pack {
+func referencePack(absoluteTime ...bool) Pack {
+	var btime float64
+	if len(absoluteTime) == 1 && absoluteTime[0] {
+		btime = 946684800
+	} else {
+		btime = -45.67
+	}
 	bver := 5
 	value := 22.1
 	sum := 0.0
 	vb := true
 	return Pack{
 		{BaseName: "dev123",
-			BaseTime:    -45.67,
+			BaseTime:    btime,
 			BaseUnit:    "degC",
 			BaseVersion: &bver,
 			Value:       &value, Unit: "degC", Name: "temp", Time: -1.0, UpdateTime: 10.0, Sum: &sum},
