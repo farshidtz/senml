@@ -1,12 +1,14 @@
-package senml
+package codec
 
 import (
 	"bytes"
 	"encoding/json"
+
+	"github.com/farshidtz/senml/v2"
 )
 
 // EncodeJSON serializes the SenML pack into JSON bytes
-func (p Pack) EncodeJSON(pretty bool) ([]byte, error) {
+func EncodeJSON(p senml.Pack, pretty bool) ([]byte, error) {
 
 	if pretty {
 		var buf bytes.Buffer
@@ -29,8 +31,8 @@ func (p Pack) EncodeJSON(pretty bool) ([]byte, error) {
 }
 
 // DecodeJSON takes a SenML pack in JSON bytes and decodes it into a Pack
-func DecodeJSON(b []byte) (Pack, error) {
-	var p Pack
+func Decode(b []byte) (senml.Pack, error) {
+	var p senml.Pack
 
 	err := json.Unmarshal(b, &p)
 	if err != nil {

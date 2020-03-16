@@ -1,4 +1,4 @@
-package senml
+package codec
 
 import (
 	"bytes"
@@ -7,12 +7,14 @@ import (
 	"io"
 	"strconv"
 	"strings"
+
+	"github.com/farshidtz/senml/v2"
 )
 
 // CSVHeader is the fixed header to support records with different value types
 const CSVHeader = "Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum,Update Time"
 
-func (p Pack) WriteCSV(w io.Writer, header bool) error {
+func WriteCSV(p senml.Pack, w io.Writer, header bool) error {
 
 	csvWriter := csv.NewWriter(w)
 
@@ -29,6 +31,7 @@ func (p Pack) WriteCSV(w io.Writer, header bool) error {
 	for i := range p {
 		row := make([]string, 9)
 		row[0] = strconv.FormatFloat(p[i].Time, 'f', -1, 64)
+		// TODO add update time here
 		row[1] = p[i].Name
 		row[2] = p[i].Unit
 		if p[i].Value != nil {
@@ -57,17 +60,17 @@ func (p Pack) WriteCSV(w io.Writer, header bool) error {
 }
 
 // EncodeCSV serializes the SenML pack into CSV bytes
-func (p Pack) EncodeCSV(header bool) ([]byte, error) {
+func EncodeCSV(p senml.Pack, header bool) ([]byte, error) {
 
 	var buf bytes.Buffer
-	err := p.WriteCSV(&buf, header)
+	err := WriteCSV(p, &buf, header)
 	if err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
 }
 
-func ReadCSV(r io.Reader, header bool) (Pack, error) {
+func ReadCSV(r io.Reader, header bool) (senml.Pack, error) {
 	csvReader := csv.NewReader(r)
 
 	if header {
@@ -83,7 +86,7 @@ func ReadCSV(r io.Reader, header bool) (Pack, error) {
 		}
 	}
 
-	var p Pack
+	var p senml.Pack
 	for {
 		row, err := csvReader.Read()
 		if err == io.EOF {
@@ -93,7 +96,7 @@ func ReadCSV(r io.Reader, header bool) (Pack, error) {
 			return nil, err
 		}
 
-		var record Record
+		var record senml.Record
 		// Time
 		record.Time, err = strconv.ParseFloat(row[0], 10)
 		if err != nil {
@@ -144,7 +147,7 @@ func ReadCSV(r io.Reader, header bool) (Pack, error) {
 }
 
 // DecodeCSV takes a SenML pack in CSV bytes and decodes it into a Pack
-func DecodeCSV(b []byte, header bool) (Pack, error) {
+func DecodeCSV(b []byte, header bool) (senml.Pack, error) {
 
 	p, err := ReadCSV(bytes.NewReader(b), header)
 	if err != nil {

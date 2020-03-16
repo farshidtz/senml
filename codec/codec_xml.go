@@ -1,17 +1,20 @@
-package senml
+package codec
 
 import (
 	"encoding/xml"
+
+	"github.com/farshidtz/senml/v2"
 )
 
 type xmlPack struct {
-	Pack
-	XMLName *bool  `xml:"sensml"`
-	XMLNS   string `xml:"xmlns,attr"`
+	senml.Pack `xml:"senml"`
+	XMLName    *bool  `xml:"sensml"`
+	XMLNS      string `xml:"xmlns,attr"`
 }
 
+
 // EncodeXML serializes the SenML pack into XML bytes
-func (p Pack) EncodeXML(pretty bool) ([]byte, error) {
+func EncodeXML(p senml.Pack, pretty bool) ([]byte, error) {
 
 	xmlPack := xmlPack{
 		Pack:  p,
@@ -26,7 +29,7 @@ func (p Pack) EncodeXML(pretty bool) ([]byte, error) {
 }
 
 // DecodeXML takes a SenML pack in XML bytes and decodes it into a Pack
-func DecodeXML(b []byte) (Pack, error) {
+func DecodeXML(b []byte) (senml.Pack, error) {
 	var temp xmlPack
 	err := xml.Unmarshal(b, &temp)
 	if err != nil {

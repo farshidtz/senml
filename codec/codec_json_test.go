@@ -1,4 +1,4 @@
-package senml
+package codec
 
 import (
 	"testing"
@@ -18,10 +18,8 @@ const (
 
 func TestEncodeJSON(t *testing.T) {
 
-	ref := referencePack()
-
 	t.Run("minified", func(t *testing.T) {
-		dataOut, err := ref.EncodeJSON(false)
+		dataOut, err := EncodeJSON(referencePack(), false)
 		if err != nil {
 			t.Fatalf("Encoding error: %s", err)
 		}
@@ -33,7 +31,7 @@ func TestEncodeJSON(t *testing.T) {
 	})
 
 	t.Run("pretty", func(t *testing.T) {
-		dataOut, err := ref.EncodeJSON(true)
+		dataOut, err := EncodeJSON(referencePack(), true)
 		if err != nil {
 			t.Fatalf("Encoding error: %s", err)
 		}
@@ -48,50 +46,16 @@ func TestEncodeJSON(t *testing.T) {
 func TestDecodeJSON(t *testing.T) {
 
 	t.Run("compare fields", func(t *testing.T) {
-		type pair struct {
-			got      interface{}
-			expected interface{}
-		}
-		ref := referencePack()
 
 		pack, err := DecodeJSON([]byte(jsonStringMinified))
 		if err != nil {
 			t.Fatalf("Error decoding: %s", err)
 		}
 
-		pairs := make(map[string]pair)
-		for i := range pack {
-			pairs["XMLName"] = pair{pack[i].XMLName, ref[i].XMLName}
-			pairs["BaseName"] = pair{pack[i].BaseName, ref[i].BaseName}
-			pairs["BaseTime"] = pair{pack[i].BaseTime, ref[i].BaseTime}
-			pairs["BaseUnit"] = pair{pack[i].BaseUnit, ref[i].BaseUnit}
-			pairs["Name"] = pair{pack[i].Name, ref[i].Name}
-			pairs["Unit"] = pair{pack[i].Unit, ref[i].Unit}
-			pairs["Time"] = pair{pack[i].Time, ref[i].Time}
-			pairs["UpdateTime"] = pair{pack[i].UpdateTime, ref[i].UpdateTime}
-			pairs["StringValue"] = pair{pack[i].StringValue, ref[i].StringValue}
-			pairs["DataValue"] = pair{pack[i].DataValue, ref[i].DataValue}
-			// pointers
-			if pack[i].BaseVersion != nil {
-				pairs["Value"] = pair{*pack[i].BaseVersion, *ref[i].BaseVersion}
-			}
-			if pack[i].Value != nil {
-				pairs["Value"] = pair{*pack[i].Value, *ref[i].Value}
-			}
-			if pack[i].BoolValue != nil {
-				pairs["BoolValue"] = pair{*pack[i].BoolValue, *ref[i].BoolValue}
-			}
-			if pack[i].Sum != nil {
-				pairs["Sum"] = pair{*pack[i].Sum, *ref[i].Sum}
-			}
-			// compare values
-			for fieldName, p := range pairs {
-				if p.got != p.expected {
-					t.Logf("Assertion failed for %s:", fieldName)
-					t.Fatalf("Got: '%v' instead of: '%v'", p.got, p.expected)
-				}
-			}
+		if err := compareFields(pack, referencePack()); err != nil {
+			t.Fatalf("Error matching records: %s", err)
 		}
+
 	})
 
 	t.Run("invalid object", func(t *testing.T) {
