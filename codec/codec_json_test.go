@@ -1,7 +1,10 @@
 package codec
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/farshidtz/senml/v2"
 )
 
 const (
@@ -19,7 +22,7 @@ const (
 func TestEncodeJSON(t *testing.T) {
 
 	t.Run("minified", func(t *testing.T) {
-		dataOut, err := EncodeJSON(referencePack(), false)
+		dataOut, err := new(JSONCoder).Encode(referencePack())
 		if err != nil {
 			t.Fatalf("Encoding error: %s", err)
 		}
@@ -31,7 +34,7 @@ func TestEncodeJSON(t *testing.T) {
 	})
 
 	t.Run("pretty", func(t *testing.T) {
-		dataOut, err := EncodeJSON(referencePack(), true)
+		dataOut, err := new(JSONCoder).Encode(referencePack(), senml.PrettyPrint(true))
 		if err != nil {
 			t.Fatalf("Encoding error: %s", err)
 		}
@@ -47,7 +50,7 @@ func TestDecodeJSON(t *testing.T) {
 
 	t.Run("compare fields", func(t *testing.T) {
 
-		pack, err := DecodeJSON([]byte(jsonStringMinified))
+		pack, err := new(JSONCoder).Decode([]byte(jsonStringMinified))
 		if err != nil {
 			t.Fatalf("Error decoding: %s", err)
 		}
@@ -60,7 +63,7 @@ func TestDecodeJSON(t *testing.T) {
 
 	t.Run("invalid object", func(t *testing.T) {
 		data := []byte(" foo ")
-		_, err := DecodeJSON(data)
+		_, err := new(JSONCoder).Decode(data)
 		if err == nil {
 			t.Fatalf("No error for invalid object")
 		}
@@ -68,7 +71,7 @@ func TestDecodeJSON(t *testing.T) {
 
 	t.Run("no pack", func(t *testing.T) {
 		data := []byte(`{"n":"hi"}`)
-		_, err := DecodeJSON(data)
+		_, err := new(JSONCoder).Decode(data)
 		if err == nil {
 			t.Fatalf("No error for record out of pack")
 		}
@@ -76,7 +79,7 @@ func TestDecodeJSON(t *testing.T) {
 
 	t.Run("empty pack", func(t *testing.T) {
 		data := []byte(`[]`)
-		_, err := DecodeJSON(data)
+		_, err := new(JSONCoder).Decode(data)
 		if err != nil {
 			t.Fatalf("Error for valid, empty pack")
 		}

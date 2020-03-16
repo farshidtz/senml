@@ -1,39 +1,15 @@
 package senml
 
 import (
-	"bytes"
-	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"regexp"
-	"strconv"
-	"strings"
 	"time"
-
-	"github.com/ugorji/go/codec"
 )
 
 // Format is the SenML encoding/decoding format
 type Format int
 
-// Encoding/Decoding constants
-const (
-	JSON Format = 1 + iota
-	XML
-	CBOR
-	CSV
-	MPACK
-	LINEP
-	JSONLINE
-)
-
 const DefaultBaseVersion = 10
-
-// OutputOptions are encoding options
-type OutputOptions struct {
-	PrettyPrint bool
-	Topic       string
-}
 
 // Pack is a SenML Pack:
 //	One or more SenML Records in an array structure.
@@ -78,210 +54,12 @@ type Record struct {
 	Sum *float64 `json:"s,omitempty"  xml:"s,attr,omitempty" cbor:"5,keyasint,omitempty"`
 }
 
-// Decode takes a SenML pack in the given serialization format and decodes it into a Pack
-// Deprecated: Use DecodeXXX functions
-func Decode(msg []byte, format Format) (Pack, error) {
-	var p Pack
-	var err error
-
-	switch {
-	case format == JSON:
-		// parse the input JSON object
-		err = json.Unmarshal(msg, &p)
-		if err != nil {
-			return p, err
-		}
-
-	case format == JSONLINE:
-		// parse the input JSON lines
-		lines := strings.Split(string(msg), "\n")
-		for _, line := range lines {
-			r := new(Record)
-			if len(line) > 5 {
-				err = json.Unmarshal([]byte(line), r)
-				if err != nil {
-					return p, fmt.Errorf("error parsing JSON line: %s", err)
-				}
-				p = append(p, *r)
-			}
-		}
-
-	case format == XML:
-		// parse the input XML
-		var temp xmlPack
-		err = xml.Unmarshal(msg, &temp)
-		if err != nil {
-			return nil, err
-		}
-		p = temp.Pack
-
-	case format == CBOR:
-		// parse the input CBOR
-		var cborHandle codec.Handle = new(codec.CborHandle)
-		var decoder *codec.Decoder = codec.NewDecoderBytes(msg, cborHandle)
-		err = decoder.Decode(&p)
-		if err != nil {
-			return p, fmt.Errorf("error parsing CBOR: %s", err)
-		}
-
-	case format == MPACK:
-		// parse the input MPACK
-		// spec for MessagePack is at https://github.com/msgpack/msgpack/
-		var mpackHandle codec.Handle = new(codec.MsgpackHandle)
-		var decoder *codec.Decoder = codec.NewDecoderBytes(msg, mpackHandle)
-		err = decoder.Decode(&p)
-		if err != nil {
-			return p, fmt.Errorf("error parsing MPACK: %s", err)
-		}
-
-	}
-
-	return p, nil
+func (p Pack) Encode(coder Coder, options ...Option) ([]byte, error) {
+	return coder.Encode(p, options...)
 }
 
-// DecodeAndValidate takes a SenML pack in the given serialization format and decodes it into a Pack which is then validated
-// Deprecated: Decode and validate separately
-func DecodeAndValidate(msg []byte, format Format) (Pack, error) {
-	pack, err := Decode(msg, format)
-	if err != nil {
-		return nil, fmt.Errorf("error decoding: %s", err)
-	}
-
-	err = pack.Validate()
-	if err != nil {
-		return nil, fmt.Errorf("invalid SenML pack: %s", err)
-	}
-
-	return pack, nil
-}
-
-// Encode serializes the SenML pack to the given format.
-// For CSV, the pack is first normalized to add base values to records
-// Deprecated: Use EncodeXXX functions
-func (p Pack) Encode(format Format, options *OutputOptions) ([]byte, error) {
-	var data []byte
-	var err error
-
-	// default options
-	prettyPrint := false
-	topic := "senml"
-
-	if options != nil {
-		prettyPrint = options.PrettyPrint
-		if options.Topic != "" {
-			topic = options.Topic
-		}
-	}
-
-	switch {
-
-	case format == JSON:
-		// output JSON version
-		if prettyPrint {
-			var buf bytes.Buffer
-			buf.WriteString("[\n  ")
-			for i, r := range p {
-				if i != 0 {
-					buf.WriteString(",\n  ")
-				}
-				recData, err := json.Marshal(r)
-				if err != nil {
-					return nil, err
-				}
-				buf.Write(recData)
-			}
-			buf.WriteString("\n]\n")
-			data = buf.Bytes()
-		} else {
-			return json.Marshal(p)
-		}
-
-	case format == XML:
-		xmlPack := xmlPack{
-			Pack:  p,
-			XMLNS: "urn:ietf:params:xml:ns:senml",
-		}
-		// output a XML version
-		if prettyPrint {
-			data, err = xml.MarshalIndent(&xmlPack, "", "  ")
-		} else {
-			data, err = xml.Marshal(&xmlPack)
-		}
-		if err != nil {
-			return nil, err
-		}
-
-	case format == CSV:
-		// normalize first to add base values to record values
-		p.Normalize()
-		// output a CSV version
-		// format: name,excel-time,value(,unit)
-		var buf bytes.Buffer
-		for _, r := range p {
-			if r.Value != nil {
-				fmt.Fprintf(&buf, "%s,%f,%f", r.Name, r.Time, *r.Value)
-				if len(r.Unit) > 0 {
-					buf.WriteString("," + r.Unit)
-				}
-				buf.WriteString("\r\n")
-			}
-		}
-		data = buf.Bytes()
-
-	case format == CBOR:
-		// output a CBOR version
-		var cborHandle codec.Handle = new(codec.CborHandle)
-		var encoder *codec.Encoder = codec.NewEncoderBytes(&data, cborHandle)
-		err = encoder.Encode(p)
-		if err != nil {
-			return nil, fmt.Errorf("error encoding CBOR: %s", err)
-		}
-
-	case format == MPACK:
-		// output a MPACK version
-		var mpackHandle codec.Handle = new(codec.MsgpackHandle)
-		var encoder *codec.Encoder = codec.NewEncoderBytes(&data, mpackHandle)
-		err = encoder.Encode(p)
-		if err != nil {
-			return nil, fmt.Errorf("error encoding MPACK: %s", err)
-		}
-
-	case format == LINEP:
-		// output Line Protocol
-		var buf bytes.Buffer
-		for _, r := range p {
-			if r.Value != nil {
-				buf.WriteString(topic)
-				buf.WriteString(",n=")
-				buf.WriteString(r.Name)
-				buf.WriteString(",u=")
-				buf.WriteString(r.Unit)
-				buf.WriteString(" v=")
-				buf.WriteString(strconv.FormatFloat(*r.Value, 'f', -1, 64))
-				buf.WriteString(" ")
-				buf.WriteString(strconv.FormatInt(int64(r.Time*1.0e9), 10))
-				buf.WriteString("\n")
-			}
-		}
-		data = buf.Bytes()
-
-	case format == JSONLINE:
-		// output Line Protocol
-		var buf bytes.Buffer
-		for _, r := range p {
-			if r.Value != nil {
-				data, err = json.Marshal(r)
-				if err != nil {
-					return nil, fmt.Errorf("error encoding JSON line: %s", err)
-				}
-				buf.Write(data)
-				buf.WriteString("\n")
-			}
-		}
-		data = buf.Bytes()
-	}
-
-	return data, nil
+func Decode(b []byte, coder Coder, options ...Option) (Pack, error) {
+	return coder.Decode(b, options...)
 }
 
 // Normalize removes all the base items adds them to corresponding record fields. It converts relative times to absolute times.
