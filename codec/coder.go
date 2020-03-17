@@ -23,4 +23,3 @@ type Coder interface {
 	Encode(Pack, ...Option) ([]byte, error)
 	Decode([]byte, ...Option) (Pack, error)
 }
-
