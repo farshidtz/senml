@@ -6,17 +6,14 @@ import (
 	"time"
 )
 
-// Format is the SenML encoding/decoding format
-type Format int
-
+// DefaultBaseVersion is the default version of the SenML data model based on
+// https://tools.ietf.org/html/rfc8428
 const DefaultBaseVersion = 10
 
-// Pack is a SenML Pack:
-//	One or more SenML Records in an array structure.
+// Pack is a SenML Pack i.e. one or more SenML Records in an array structure.
 type Pack []Record
 
-// Record is a SenML Record:
-//	One measurement or configuration instance in time presented using the SenML data model.
+// Record is a SenML Record i.e. one measurement or configuration instance in time presented using the SenML data model.
 type Record struct {
 	XMLName *bool `json:"_,omitempty" xml:"senml"`
 
@@ -54,19 +51,9 @@ type Record struct {
 	Sum *float64 `json:"s,omitempty"  xml:"s,attr,omitempty" cbor:"5,keyasint,omitempty"`
 }
 
-// Normalize removes all the base items adds them to corresponding record fields. It converts relative times to absolute times.
-// Normalize must be called on a validated pack only. The Decode function performs this validation internally.
-// A SenML Record is referred to as "resolved" if it does not contain
-//   any base values, i.e., labels starting with the character "b", except
-//   for Base Version fields (see below), and has no relative times.  To
-//   resolve the Records, the applicable base values of the SenML Pack (if
-//   any) are applied to the Record.  That is, for the base values in the
-//   Record or before the Record in the Pack, Name and Base Name are
-//   concatenated, the Base Time is added to the time of the Record, the
-//   Base Unit is applied to the Record if it did not contain a Unit, etc.
-//   In addition, the Records need to be in chronological order in the
-//   Pack.
-//  Source: https://tools.ietf.org/html/rfc8428#section-4.6
+// Normalize converts the SenML Pack to to the resolved format according to
+// https://tools.ietf.org/html/rfc8428#section-4.6
+// Normalize must be called on a validated pack only.
 func (p Pack) Normalize() {
 	var bname string
 	var btime float64
@@ -147,7 +134,7 @@ func (p Pack) Normalize() {
 	return
 }
 
-// Clone returns a deep copy of p
+// Clone returns a deep copy of the SenML Pack
 func (p Pack) Clone() (clone Pack) {
 	cloneBool := func(b *bool) *bool {
 		if b != nil {
@@ -198,7 +185,7 @@ func (p Pack) Clone() (clone Pack) {
 	return clone
 }
 
-// Validate tests if SenML is valid
+// Validate tests if the SenML Pack is valid
 func (p Pack) Validate() error {
 	var bname string
 	var bver = -1

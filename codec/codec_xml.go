@@ -15,8 +15,8 @@ type xmlPack struct {
 
 // EncodeXML serializes the SenML pack into XML bytes
 func EncodeXML(p senml.Pack, options ...Option) ([]byte, error) {
-	o := &Options{
-		PrettyPrint: false,
+	o := &codecOptions{
+		prettyPrint: false,
 	}
 	for _, opt := range options {
 		opt(o)
@@ -27,7 +27,7 @@ func EncodeXML(p senml.Pack, options ...Option) ([]byte, error) {
 		XMLNS: "urn:ietf:params:xml:ns:senml",
 	}
 
-	if o.PrettyPrint {
+	if o.prettyPrint {
 		return xml.MarshalIndent(&xmlPack, "", "  ")
 	}
 

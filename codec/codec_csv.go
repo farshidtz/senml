@@ -11,12 +11,12 @@ import (
 	"github.com/farshidtz/senml/v2"
 )
 
-// CSVHeader is the fixed header to support records with different value types
+// CSVHeader is the fixed CSV header
 const CSVHeader = "Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum"
 
 func WriteCSV(p senml.Pack, w io.Writer, options ...Option) error {
-	o := &Options{
-		PrettyPrint: false,
+	o := &codecOptions{
+		withHeader: false,
 	}
 	for _, opt := range options {
 		opt(o)
@@ -24,7 +24,7 @@ func WriteCSV(p senml.Pack, w io.Writer, options ...Option) error {
 
 	csvWriter := csv.NewWriter(w)
 
-	if o.WithHeader {
+	if o.withHeader {
 		err := csvWriter.Write(strings.Split(CSVHeader, ","))
 		if err != nil {
 			return err
@@ -76,8 +76,8 @@ func EncodeCSV(p senml.Pack, options ...Option) ([]byte, error) {
 }
 
 func ReadCSV(r io.Reader, options ...Option) (senml.Pack, error) {
-	o := &Options{
-		PrettyPrint: false,
+	o := &codecOptions{
+		withHeader: false,
 	}
 	for _, opt := range options {
 		opt(o)
@@ -85,7 +85,7 @@ func ReadCSV(r io.Reader, options ...Option) (senml.Pack, error) {
 
 	csvReader := csv.NewReader(r)
 
-	if o.WithHeader {
+	if o.withHeader {
 		row, err := csvReader.Read()
 		if err == io.EOF {
 			return nil, fmt.Errorf("missing header or no input")

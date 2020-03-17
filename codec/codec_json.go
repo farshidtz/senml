@@ -9,14 +9,14 @@ import (
 
 // EncodeJSON serializes the SenML pack into JSON bytes
 func EncodeJSON(p senml.Pack, options ...Option) ([]byte, error) {
-	o := &Options{
-		PrettyPrint: false,
+	o := &codecOptions{
+		prettyPrint: false,
 	}
 	for _, opt := range options {
 		opt(o)
 	}
 
-	if o.PrettyPrint {
+	if o.prettyPrint {
 		var buf bytes.Buffer
 		buf.WriteString("[\n  ")
 		for i, r := range p {
