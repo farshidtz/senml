@@ -60,7 +60,7 @@ func ExampleNormalize() {
 	// ]
 }
 
-func ExampleValidate() {
+func ExamplePack_Validate() {
 	input := `[{"bn":"room1/ temp","t":1270000040,"v":23.5},{"t":1270000050,"v":23.6}]`
 
 	// decode JSON
