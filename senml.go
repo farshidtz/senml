@@ -1,3 +1,8 @@
+// Package senml is an implementation of RFC8428 - Sensor Measurement Lists (SenML):
+// https://tools.ietf.org/html/rfc8428
+//
+// The sub-package codec provides various encoding/decoding functions for senml.Pack:
+// https://godoc.org/github.com/farshidtz/senml/codec
 package senml
 
 import (
@@ -6,14 +11,14 @@ import (
 	"time"
 )
 
-// DefaultBaseVersion is the default version of the SenML data model based on
+// DefaultBaseVersion is the default version of the SenML data model based on:
 // https://tools.ietf.org/html/rfc8428
 const DefaultBaseVersion = 10
 
-// Pack is a SenML Pack i.e. one or more SenML Records in an array structure.
+// Pack is a SenML Pack which is one or more SenML Records in an array structure.
 type Pack []Record
 
-// Record is a SenML Record i.e. one measurement or configuration instance in time presented using the SenML data model.
+// Record is a SenML Record which is one measurement or configuration instance in time presented using the SenML data model.
 type Record struct {
 	XMLName *bool `json:"_,omitempty" xml:"senml"`
 
@@ -51,8 +56,9 @@ type Record struct {
 	Sum *float64 `json:"s,omitempty"  xml:"s,attr,omitempty" cbor:"5,keyasint,omitempty"`
 }
 
-// Normalize converts the SenML Pack to to the resolved format according to
+// Normalize converts the SenML Pack to to the resolved format according to:
 // https://tools.ietf.org/html/rfc8428#section-4.6
+//
 // Normalize must be called on a validated pack only.
 func (p Pack) Normalize() {
 	var bname string

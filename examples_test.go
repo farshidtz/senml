@@ -7,7 +7,7 @@ import (
 	"github.com/farshidtz/senml/v2/codec"
 )
 
-func ExampleDecodeJSON() {
+func Example_DecodeJSON() {
 	input := `[{"bn":"room1/temp","u":"Cel","t":1276020076.305,"v":23.5},{"u":"Cel","t":1276020091.305,"v":23.6}]`
 
 	// decode JSON
@@ -23,7 +23,7 @@ func ExampleDecodeJSON() {
 	}
 }
 
-func ExampleEncodeJSON() {
+func Example_EncodeJSON() {
 	v := 23.1
 	var p senml.Pack = []senml.Record{
 		{Value: &v, Unit: "Cel", Name: "urn:dev:ow:10e2073a01080063"},
@@ -37,7 +37,7 @@ func ExampleEncodeJSON() {
 	// Output: [{"n":"urn:dev:ow:10e2073a01080063","u":"Cel","v":23.1}]
 }
 
-func ExampleNormalize() {
+func ExamplePack_Normalize() {
 	input := `[{"bn":"room1/temp","u":"Cel","t":1276020076.305,"v":23.5},{"u":"Cel","t":1276020091.305,"v":23.6}]`
 
 	// decode JSON
@@ -77,7 +77,7 @@ func ExamplePack_Validate() {
 	// Output: invalid name: must begin with alphanumeric and contain alphanumeric or one of - : . / _
 }
 
-func ExampleValidate2() {
+func ExamplePack_Validate2() {
 	input := `[{"bn":"room1/temp","t":1270000050,"v":23.6,"vs":"cool"}]`
 
 	// decode JSON
@@ -94,7 +94,7 @@ func ExampleValidate2() {
 	// Output: too many values in single record
 }
 
-func ExampleEncodeXML() {
+func Example_EncodeXML() {
 	var pack senml.Pack = []senml.Record{
 		{Time: 1276020000, Name: "room1/temp_label", StringValue: "hot"},
 		{Time: 1276020100, Name: "room1/temp_label", StringValue: "cool"},
@@ -113,7 +113,7 @@ func ExampleEncodeXML() {
 	// </sensml>
 }
 
-func ExampleEncodeCSV() {
+func Example_EncodeCSV() {
 	var pack senml.Pack = []senml.Record{
 		{Time: 1276020000, Name: "room1/temp_label", StringValue: "hot"},
 		{Time: 1276020100, Name: "room1/temp_label", StringValue: "cool"},
