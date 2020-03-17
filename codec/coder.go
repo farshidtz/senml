@@ -1,25 +1,20 @@
-package senml
+package codec
 
 type Options struct {
+	// PrettyPrint enables indentation of JSON and XML outputs
 	PrettyPrint bool
-	Header      bool
+	// WithHeader enables CSV header
+	WithHeader bool
 }
 
-func PrettyPrint(enable bool) Option {
-	return func(f *Options) {
-		f.PrettyPrint = enable
-	}
+// PrettyPrint enables indentation of JSON and XML outputs
+func PrettyPrint(o *Options) {
+	o.PrettyPrint = true
 }
 
-func Header(enable bool) Option {
-	return func(f *Options) {
-		f.Header = enable
-	}
+// WithHeader enables CSV header
+func WithHeader(o *Options) {
+	o.WithHeader = true
 }
 
 type Option func(*Options)
-
-type Coder interface {
-	Encode(Pack, ...Option) ([]byte, error)
-	Decode([]byte, ...Option) (Pack, error)
-}

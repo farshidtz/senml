@@ -54,14 +54,6 @@ type Record struct {
 	Sum *float64 `json:"s,omitempty"  xml:"s,attr,omitempty" cbor:"5,keyasint,omitempty"`
 }
 
-func (p Pack) Encode(coder Coder, options ...Option) ([]byte, error) {
-	return coder.Encode(p, options...)
-}
-
-func Decode(b []byte, coder Coder, options ...Option) (Pack, error) {
-	return coder.Decode(b, options...)
-}
-
 // Normalize removes all the base items adds them to corresponding record fields. It converts relative times to absolute times.
 // Normalize must be called on a validated pack only. The Decode function performs this validation internally.
 // A SenML Record is referred to as "resolved" if it does not contain

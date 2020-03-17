@@ -14,14 +14,20 @@ type xmlPack struct {
 
 
 // EncodeXML serializes the SenML pack into XML bytes
-func EncodeXML(p senml.Pack, pretty bool) ([]byte, error) {
+func EncodeXML(p senml.Pack, options ...Option) ([]byte, error) {
+	o := &Options{
+		PrettyPrint: false,
+	}
+	for _, opt := range options {
+		opt(o)
+	}
 
 	xmlPack := xmlPack{
 		Pack:  p,
 		XMLNS: "urn:ietf:params:xml:ns:senml",
 	}
 
-	if pretty {
+	if o.PrettyPrint {
 		return xml.MarshalIndent(&xmlPack, "", "  ")
 	}
 

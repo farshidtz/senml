@@ -18,7 +18,7 @@ const (
 func TestEncodeXML(t *testing.T) {
 
 	t.Run("minified", func(t *testing.T) {
-		dataOut, err := EncodeXML(referencePack(), false)
+		dataOut, err := EncodeXML(referencePack())
 		if err != nil {
 			t.Fatalf("Encoding error: %s", err)
 		}
@@ -30,7 +30,7 @@ func TestEncodeXML(t *testing.T) {
 	})
 
 	t.Run("pretty", func(t *testing.T) {
-		dataOut, err := EncodeXML(referencePack(), true)
+		dataOut, err := EncodeXML(referencePack(), PrettyPrint)
 		if err != nil {
 			t.Fatalf("Encoding error: %s", err)
 		}

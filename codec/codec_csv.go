@@ -12,13 +12,19 @@ import (
 )
 
 // CSVHeader is the fixed header to support records with different value types
-const CSVHeader = "Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum,Update Time"
+const CSVHeader = "Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum"
 
-func WriteCSV(p senml.Pack, w io.Writer, header bool) error {
+func WriteCSV(p senml.Pack, w io.Writer, options ...Option) error {
+	o := &Options{
+		PrettyPrint: false,
+	}
+	for _, opt := range options {
+		opt(o)
+	}
 
 	csvWriter := csv.NewWriter(w)
 
-	if header {
+	if o.WithHeader {
 		err := csvWriter.Write(strings.Split(CSVHeader, ","))
 		if err != nil {
 			return err
@@ -31,21 +37,20 @@ func WriteCSV(p senml.Pack, w io.Writer, header bool) error {
 	for i := range p {
 		row := make([]string, 9)
 		row[0] = strconv.FormatFloat(p[i].Time, 'f', -1, 64)
-		// TODO add update time here
-		row[1] = p[i].Name
-		row[2] = p[i].Unit
+		row[1] = strconv.FormatFloat(p[i].UpdateTime, 'f', -1, 64)
+		row[2] = p[i].Name
+		row[3] = p[i].Unit
 		if p[i].Value != nil {
-			row[3] = strconv.FormatFloat(*p[i].Value, 'f', -1, 64)
+			row[4] = strconv.FormatFloat(*p[i].Value, 'f', -1, 64)
 		}
-		row[4] = p[i].StringValue
+		row[5] = p[i].StringValue
 		if p[i].BoolValue != nil {
-			row[5] = fmt.Sprintf("%t", *p[i].BoolValue)
+			row[6] = fmt.Sprintf("%t", *p[i].BoolValue)
 		}
-		row[6] = p[i].DataValue
+		row[7] = p[i].DataValue
 		if p[i].Sum != nil {
-			row[7] = strconv.FormatFloat(*p[i].Sum, 'f', -1, 64)
+			row[8] = strconv.FormatFloat(*p[i].Sum, 'f', -1, 64)
 		}
-		row[8] = strconv.FormatFloat(p[i].UpdateTime, 'f', -1, 64)
 
 		err := csvWriter.Write(row)
 		if err != nil {
@@ -60,20 +65,27 @@ func WriteCSV(p senml.Pack, w io.Writer, header bool) error {
 }
 
 // EncodeCSV serializes the SenML pack into CSV bytes
-func EncodeCSV(p senml.Pack, header bool) ([]byte, error) {
+func EncodeCSV(p senml.Pack, options ...Option) ([]byte, error) {
 
 	var buf bytes.Buffer
-	err := WriteCSV(p, &buf, header)
+	err := WriteCSV(p, &buf, options...)
 	if err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
 }
 
-func ReadCSV(r io.Reader, header bool) (senml.Pack, error) {
+func ReadCSV(r io.Reader, options ...Option) (senml.Pack, error) {
+	o := &Options{
+		PrettyPrint: false,
+	}
+	for _, opt := range options {
+		opt(o)
+	}
+
 	csvReader := csv.NewReader(r)
 
-	if header {
+	if o.WithHeader {
 		row, err := csvReader.Read()
 		if err == io.EOF {
 			return nil, fmt.Errorf("missing header or no input")
@@ -99,6 +111,11 @@ func ReadCSV(r io.Reader, header bool) (senml.Pack, error) {
 		var record senml.Record
 		// Time
 		record.Time, err = strconv.ParseFloat(row[0], 10)
+		if err != nil {
+			return nil, err
+		}
+		// Update Time
+		record.UpdateTime, err = strconv.ParseFloat(row[8], 10)
 		if err != nil {
 			return nil, err
 		}
@@ -134,11 +151,6 @@ func ReadCSV(r io.Reader, header bool) (senml.Pack, error) {
 			}
 			record.Sum = &sum
 		}
-		// Update Time
-		record.UpdateTime, err = strconv.ParseFloat(row[8], 10)
-		if err != nil {
-			return nil, err
-		}
 
 		p = append(p, record)
 	}
@@ -147,9 +159,9 @@ func ReadCSV(r io.Reader, header bool) (senml.Pack, error) {
 }
 
 // DecodeCSV takes a SenML pack in CSV bytes and decodes it into a Pack
-func DecodeCSV(b []byte, header bool) (senml.Pack, error) {
+func DecodeCSV(b []byte, options ...Option) (senml.Pack, error) {
 
-	p, err := ReadCSV(bytes.NewReader(b), header)
+	p, err := ReadCSV(bytes.NewReader(b), options...)
 	if err != nil {
 		return nil, err
 	}

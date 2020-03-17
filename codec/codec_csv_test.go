@@ -6,20 +6,20 @@ import (
 
 const (
 	// CSV should be in normalized form
-	csvString = `946684799,dev123temp,degC,22.1,,,,0,10
-946684799,dev123room,degC,,kitchen,,,,0
-946684800,dev123data,degC,,,,abc,,0
-946684800,dev123ok,degC,,,true,,,0
+	csvString = `946684799,10,dev123temp,degC,22.1,,,,0,
+946684799,0,dev123room,degC,,kitchen,,,,
+946684800,0,dev123data,degC,,,,abc,,
+946684800,0,dev123ok,degC,,,true,,,
 `
 
-	csvStringWithHeader = `Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum,Update Time
+	csvStringWithHeader = `Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum
 ` + csvString
 )
 
 func TestEncodeCSV(t *testing.T) {
 
 	t.Run("without header", func(t *testing.T) {
-		dataOut, err := EncodeCSV( referencePack(true), false)
+		dataOut, err := EncodeCSV(referencePack(true))
 		if err != nil {
 			t.Fatalf("Encoding error: %s", err)
 		}
@@ -31,7 +31,7 @@ func TestEncodeCSV(t *testing.T) {
 	})
 
 	t.Run("with header", func(t *testing.T) {
-		dataOut, err := EncodeCSV( referencePack(true), true)
+		dataOut, err := EncodeCSV(referencePack(true), WithHeader)
 		if err != nil {
 			t.Fatalf("Encoding error: %s", err)
 		}
@@ -47,7 +47,7 @@ func TestDecodeCSV(t *testing.T) {
 
 	t.Run("compare fields", func(t *testing.T) {
 
-		pack, err := DecodeCSV([]byte(csvString), false)
+		pack, err := DecodeCSV([]byte(csvString))
 		if err != nil {
 			t.Fatalf("Error decoding: %s", err)
 		}
@@ -62,7 +62,7 @@ func TestDecodeCSV(t *testing.T) {
 
 	t.Run("wrong header", func(t *testing.T) {
 		data := []byte("Bad,Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum,Update Time")
-		_, err := DecodeCSV(data, true)
+		_, err := DecodeCSV(data, WithHeader)
 		if err == nil {
 			t.Fatalf("No error for wrong header")
 		}

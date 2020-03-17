@@ -7,17 +7,16 @@ import (
 	"github.com/farshidtz/senml/v2"
 )
 
-type JSONCoder struct {
-	senml.Options
-}
-
 // EncodeJSON serializes the SenML pack into JSON bytes
-func (c JSONCoder) Encode(p senml.Pack, options ...senml.Option) ([]byte, error) {
+func EncodeJSON(p senml.Pack, options ...Option) ([]byte, error) {
+	o := &Options{
+		PrettyPrint: false,
+	}
 	for _, opt := range options {
-		opt(&c.Options)
+		opt(o)
 	}
 
-	if c.PrettyPrint {
+	if o.PrettyPrint {
 		var buf bytes.Buffer
 		buf.WriteString("[\n  ")
 		for i, r := range p {
@@ -38,7 +37,7 @@ func (c JSONCoder) Encode(p senml.Pack, options ...senml.Option) ([]byte, error)
 }
 
 // DecodeJSON takes a SenML pack in JSON bytes and decodes it into a Pack
-func (JSONCoder) Decode(b []byte, options ...senml.Option) (senml.Pack, error) {
+func DecodeJSON(b []byte) (senml.Pack, error) {
 	var p senml.Pack
 
 	err := json.Unmarshal(b, &p)
