@@ -273,7 +273,7 @@ func ValidateName(name string) error {
 	}
 	validName, err := regexp.Compile(`^[a-zA-Z0-9]+[a-zA-Z0-9-:./_]*$`)
 	if err != nil {
-		fmt.Println(err)
+		return fmt.Errorf("invalid regex for name validation: %s", err)
 	}
 	if !validName.MatchString(name) {
 		return fmt.Errorf("invalid name: must begin with alphanumeric and contain alphanumeric or one of - : . / _")
