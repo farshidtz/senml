@@ -6,10 +6,10 @@ import (
 
 const (
 	// CSV should be in normalized form
-	csvString = `946684799,10,dev123temp,degC,22.1,,,,0,
-946684799,0,dev123room,degC,,kitchen,,,,
-946684800,0,dev123data,degC,,,,abc,,
-946684800,0,dev123ok,degC,,,true,,,
+	csvString = `946684799,10,dev123temp,degC,22.1,,,,0
+946684799,0,dev123room,degC,,kitchen,,,
+946684800,0,dev123data,degC,,,,abc,
+946684800,0,dev123ok,degC,,,true,,
 `
 
 	csvStringWithHeader = `Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum

@@ -115,37 +115,37 @@ func ReadCSV(r io.Reader, options ...Option) (senml.Pack, error) {
 			return nil, err
 		}
 		// Update Time
-		record.UpdateTime, err = strconv.ParseFloat(row[8], 10)
+		record.UpdateTime, err = strconv.ParseFloat(row[1], 10)
 		if err != nil {
 			return nil, err
 		}
 		// Name
-		record.Name = row[1]
+		record.Name = row[2]
 		// Unit
-		record.Unit = row[2]
+		record.Unit = row[3]
 		// Value
-		if row[3] != "" {
-			value, err := strconv.ParseFloat(row[3], 10)
+		if row[4] != "" {
+			value, err := strconv.ParseFloat(row[4], 10)
 			if err != nil {
 				return nil, err
 			}
 			record.Value = &value
 		}
 		// String Value
-		record.StringValue = row[4]
+		record.StringValue = row[5]
 		// Boolean Value
-		if row[5] != "" {
-			boolValue, err := strconv.ParseBool(row[5])
+		if row[6] != "" {
+			boolValue, err := strconv.ParseBool(row[6])
 			if err != nil {
 				return nil, err
 			}
 			record.BoolValue = &boolValue
 		}
 		// Data Value
-		record.DataValue = row[6]
+		record.DataValue = row[7]
 		// Sum
-		if row[7] != "" {
-			sum, err := strconv.ParseFloat(row[7], 10)
+		if row[8] != "" {
+			sum, err := strconv.ParseFloat(row[8], 10)
 			if err != nil {
 				return nil, err
 			}
