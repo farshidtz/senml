@@ -11,8 +11,8 @@ import (
 	"github.com/farshidtz/senml/v2"
 )
 
-// CSVHeader is the fixed CSV header
-const CSVHeader = "Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum"
+// DefaultCSVHeader is the default (currently fixed) CSV header
+const DefaultCSVHeader = "Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum"
 
 func WriteCSV(p senml.Pack, w io.Writer, options ...Option) error {
 	o := &codecOptions{
@@ -25,7 +25,7 @@ func WriteCSV(p senml.Pack, w io.Writer, options ...Option) error {
 	csvWriter := csv.NewWriter(w)
 
 	if o.header {
-		err := csvWriter.Write(strings.Split(CSVHeader, ","))
+		err := csvWriter.Write(strings.Split(DefaultCSVHeader, ","))
 		if err != nil {
 			return err
 		}
@@ -93,8 +93,8 @@ func ReadCSV(r io.Reader, options ...Option) (senml.Pack, error) {
 		if err != nil {
 			return nil, err
 		}
-		if joined := strings.Join(row, ","); joined != CSVHeader {
-			return nil, fmt.Errorf("unexpected header: %s. Expected: %s", joined, CSVHeader)
+		if joined := strings.Join(row, ","); joined != DefaultCSVHeader {
+			return nil, fmt.Errorf("unexpected header: %s. Expected: %s", joined, DefaultCSVHeader)
 		}
 	}
 
