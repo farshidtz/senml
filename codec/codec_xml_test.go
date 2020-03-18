@@ -33,7 +33,7 @@ func TestEncodeXML(t *testing.T) {
 	})
 
 	t.Run("pretty", func(t *testing.T) {
-		dataOut, err := EncodeXML(referencePack(), PrettyPrint)
+		dataOut, err := EncodeXML(referencePack(), SetPrettyPrint)
 		if err != nil {
 			t.Fatalf("Encoding error: %s", err)
 		}
@@ -70,7 +70,7 @@ func ExampleEncodeXML() {
 	}
 
 	// encode to Pretty XML
-	xmlBytes, err := EncodeXML(pack, PrettyPrint)
+	xmlBytes, err := EncodeXML(pack, SetPrettyPrint)
 	if err != nil {
 		panic(err) // handle the error
 	}

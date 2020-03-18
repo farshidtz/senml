@@ -36,7 +36,7 @@ func TestEncodeCSV(t *testing.T) {
 	})
 
 	t.Run("with header", func(t *testing.T) {
-		dataOut, err := EncodeCSV(referencePack(true), WithHeader)
+		dataOut, err := EncodeCSV(referencePack(true), SetDefaultHeader)
 		if err != nil {
 			t.Fatalf("Encoding error: %s", err)
 		}
@@ -67,7 +67,7 @@ func TestDecodeCSV(t *testing.T) {
 
 	t.Run("wrong header", func(t *testing.T) {
 		data := []byte("Bad,Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum,Update Time")
-		_, err := DecodeCSV(data, WithHeader)
+		_, err := DecodeCSV(data, SetDefaultHeader)
 		if err == nil {
 			t.Fatalf("No error for wrong header")
 		}
@@ -84,7 +84,7 @@ func ExampleEncodeCSV() {
 	}
 
 	// encode to CSV (format: name,excel-time,value,unit)
-	csvBytes, err := EncodeCSV(pack, WithHeader)
+	csvBytes, err := EncodeCSV(pack, SetDefaultHeader)
 	if err != nil {
 		panic(err) // handle the error
 	}
@@ -101,7 +101,7 @@ func ExampleDecodeCSV() {
 946684799,0,dev123room,degC,,kitchen,,,`
 
 	// decode JSON
-	pack, err := DecodeCSV([]byte(input), WithHeader)
+	pack, err := DecodeCSV([]byte(input), SetDefaultHeader)
 	if err != nil {
 		panic(err) // handle the error
 	}
@@ -120,12 +120,12 @@ func ExampleWriteCSV() {
 	}
 
 	var writer io.Writer = os.Stdout // write to stdout
-	err := WriteCSV(pack, writer, WithHeader)
+	err := WriteCSV(pack, writer, SetDefaultHeader)
 	if err != nil {
 		panic(err) // handle the error
 	}
 	// Output:
-	// xTime,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum
+	// Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum
 	// 1276020000,0,room1/temp_label,,,hot,,,
 	// 1276020100,0,room1/temp_label,,,cool,,,
 }

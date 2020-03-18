@@ -25,7 +25,7 @@ func Example_decodeValidateNormalizeEncode() {
 	pack.Normalize()
 
 	// encode the normalized SenML Pack to JSON
-	dataOut, err := codec.EncodeJSON(pack, codec.PrettyPrint)
+	dataOut, err := codec.EncodeJSON(pack, codec.SetPrettyPrint)
 	if err != nil {
 		panic(err) // handle the error
 	}
@@ -48,7 +48,7 @@ func ExamplePack_Normalize() {
 
 	pack.Normalize()
 
-	dataOut, err := codec.EncodeJSON(pack, codec.PrettyPrint)
+	dataOut, err := codec.EncodeJSON(pack, codec.SetPrettyPrint)
 	if err != nil {
 		panic(err) // handle the error
 	}

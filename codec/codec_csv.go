@@ -16,7 +16,7 @@ const CSVHeader = "Time,Update Time,Name,Unit,Value,String Value,Boolean Value,D
 
 func WriteCSV(p senml.Pack, w io.Writer, options ...Option) error {
 	o := &codecOptions{
-		withHeader: false,
+		header: false,
 	}
 	for _, opt := range options {
 		opt(o)
@@ -24,7 +24,7 @@ func WriteCSV(p senml.Pack, w io.Writer, options ...Option) error {
 
 	csvWriter := csv.NewWriter(w)
 
-	if o.withHeader {
+	if o.header {
 		err := csvWriter.Write(strings.Split(CSVHeader, ","))
 		if err != nil {
 			return err
@@ -77,7 +77,7 @@ func EncodeCSV(p senml.Pack, options ...Option) ([]byte, error) {
 
 func ReadCSV(r io.Reader, options ...Option) (senml.Pack, error) {
 	o := &codecOptions{
-		withHeader: false,
+		header: false,
 	}
 	for _, opt := range options {
 		opt(o)
@@ -85,7 +85,7 @@ func ReadCSV(r io.Reader, options ...Option) (senml.Pack, error) {
 
 	csvReader := csv.NewReader(r)
 
-	if o.withHeader {
+	if o.header {
 		row, err := csvReader.Read()
 		if err == io.EOF {
 			return nil, fmt.Errorf("missing header or no input")

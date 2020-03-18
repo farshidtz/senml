@@ -34,7 +34,7 @@ func TestEncodeJSON(t *testing.T) {
 	})
 
 	t.Run("pretty", func(t *testing.T) {
-		dataOut, err := EncodeJSON(referencePack(), PrettyPrint)
+		dataOut, err := EncodeJSON(referencePack(), SetPrettyPrint)
 		if err != nil {
 			t.Fatalf("Encoding error: %s", err)
 		}

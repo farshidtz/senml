@@ -2,18 +2,25 @@ package codec
 
 type codecOptions struct {
 	prettyPrint bool
-	withHeader  bool
+	header      bool
 }
 
-// PrettyPrint enables indentation of JSON and XML outputs
-func PrettyPrint(o *codecOptions) {
+// SetPrettyPrint enables indentation for JSON and XML encoding
+func SetPrettyPrint(o *codecOptions) {
 	o.prettyPrint = true
 }
 
-// WithHeader enables CSV header
-func WithHeader(o *codecOptions) {
-	o.withHeader = true
+// SetDefaultHeader enables header for CSV encoding/decoding
+func SetDefaultHeader(o *codecOptions) {
+	o.header = true
 }
+
+// TODO set custom CSV header
+//func SetHeader(header string) Option {
+//	return func(o *codecOptions) {
+//		o.header = header
+//	}
+//}
 
 // Option is the function type for setting codec options
 type Option func(*codecOptions)
