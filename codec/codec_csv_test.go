@@ -1,7 +1,12 @@
 package codec
 
 import (
+	"fmt"
+	"io"
+	"os"
 	"testing"
+
+	"github.com/farshidtz/senml/v2"
 )
 
 const (
@@ -68,4 +73,59 @@ func TestDecodeCSV(t *testing.T) {
 		}
 	})
 
+}
+
+// EXAMPLES
+
+func ExampleEncodeCSV() {
+	var pack senml.Pack = []senml.Record{
+		{Time: 1276020000, Name: "room1/temp_label", StringValue: "hot"},
+		{Time: 1276020100, Name: "room1/temp_label", StringValue: "cool"},
+	}
+
+	// encode to CSV (format: name,excel-time,value,unit)
+	csvBytes, err := EncodeCSV(pack, WithHeader)
+	if err != nil {
+		panic(err) // handle the error
+	}
+	fmt.Printf("%s\n", csvBytes)
+	// Output:
+	// Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum
+	// 1276020000,0,room1/temp_label,,,hot,,,
+	// 1276020100,0,room1/temp_label,,,cool,,,
+}
+
+func ExampleDecodeCSV() {
+	input := `Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum
+946684799,10,dev123temp,degC,22.1,,,,0
+946684799,0,dev123room,degC,,kitchen,,,`
+
+	// decode JSON
+	pack, err := DecodeCSV([]byte(input), WithHeader)
+	if err != nil {
+		panic(err) // handle the error
+	}
+
+	// validate the SenML Pack
+	err = pack.Validate()
+	if err != nil {
+		panic(err) // handle the error
+	}
+}
+
+func ExampleWriteCSV() {
+	var pack senml.Pack = []senml.Record{
+		{Time: 1276020000, Name: "room1/temp_label", StringValue: "hot"},
+		{Time: 1276020100, Name: "room1/temp_label", StringValue: "cool"},
+	}
+
+	var writer io.Writer = os.Stdout // write to stdout
+	err := WriteCSV(pack, writer, WithHeader)
+	if err != nil {
+		panic(err) // handle the error
+	}
+	// Output:
+	// xTime,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum
+	// 1276020000,0,room1/temp_label,,,hot,,,
+	// 1276020100,0,room1/temp_label,,,cool,,,
 }

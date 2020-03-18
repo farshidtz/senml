@@ -1,7 +1,10 @@
 package codec
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/farshidtz/senml/v2"
 )
 
 const (
@@ -56,4 +59,41 @@ func TestDecodeXML(t *testing.T) {
 		}
 	})
 
+}
+
+// EXAMPLES
+
+func ExampleEncodeXML() {
+	var pack senml.Pack = []senml.Record{
+		{Time: 1276020000, Name: "room1/temp_label", StringValue: "hot"},
+		{Time: 1276020100, Name: "room1/temp_label", StringValue: "cool"},
+	}
+
+	// encode to Pretty XML
+	xmlBytes, err := EncodeXML(pack, PrettyPrint)
+	if err != nil {
+		panic(err) // handle the error
+	}
+	fmt.Printf("%s\n", xmlBytes)
+	// Output:
+	// <sensml xmlns="urn:ietf:params:xml:ns:senml">
+	//   <senml n="room1/temp_label" t="1.27602e+09" vs="hot"></senml>
+	//   <senml n="room1/temp_label" t="1.2760201e+09" vs="cool"></senml>
+	// </sensml>
+}
+
+func ExampleDecodeXML() {
+	input := `<sensml xmlns="urn:ietf:params:xml:ns:senml"><senml bn="dev123" bt="-45.67" bu="degC" bver="5" n="temp" u="degC" t="-1" ut="10" v="22.1" s="0"></senml><senml n="room" t="-1" vs="kitchen"></senml><senml n="data" vd="abc"></senml><senml n="ok" vb="true"></senml></sensml>`
+
+	// decode XML
+	pack, err := DecodeXML([]byte(input))
+	if err != nil {
+		panic(err) // handle the error
+	}
+
+	// validate the SenML Pack
+	err = pack.Validate()
+	if err != nil {
+		panic(err) // handle the error
+	}
 }

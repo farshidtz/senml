@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"testing"
+
+	"github.com/farshidtz/senml/v2"
 )
 
 const (
@@ -59,4 +61,36 @@ func TestDecodeCBOR(t *testing.T) {
 		}
 	})
 
+}
+
+// EXAMPLES
+
+func ExampleEncodeCBOR() {
+	v := 23.1
+	var p senml.Pack = []senml.Record{
+		{Value: &v, Unit: "Cel", Name: "urn:dev:ow:10e2073a01080063"},
+	}
+
+	dataOut, err := EncodeCBOR(p)
+	if err != nil {
+		panic(err) // handle the error
+	}
+	fmt.Printf("%v", dataOut)
+	// Output: [129 163 0 120 27 117 114 110 58 100 101 118 58 111 119 58 49 48 101 50 48 55 51 97 48 49 48 56 48 48 54 51 1 99 67 101 108 2 251 64 55 25 153 153 153 153 154]
+}
+
+// Output Diagnostic:
+// http://cbor.me/?bytes=81a300781b75726e3a6465763a6f773a31306532303733613031303830303633016343656c02fb403719999999999a
+func ExampleEncodeCBOR_hex() {
+	v := 23.1
+	var p senml.Pack = []senml.Record{
+		{Value: &v, Unit: "Cel", Name: "urn:dev:ow:10e2073a01080063"},
+	}
+
+	dataOut, err := EncodeCBOR(p)
+	if err != nil {
+		panic(err) // handle the error
+	}
+	fmt.Printf(hex.EncodeToString(dataOut))
+	// Output: 81a300781b75726e3a6465763a6f773a31306532303733613031303830303633016343656c02fb403719999999999a
 }
