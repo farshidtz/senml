@@ -56,8 +56,8 @@ func WriteCSV(p senml.Pack, w io.Writer, options ...Option) error {
 		if err != nil {
 			return err
 		}
+		csvWriter.Flush()
 	}
-	csvWriter.Flush() // TODO flush during the iterations?
 	if err := csvWriter.Error(); err != nil {
 		return err
 	}
