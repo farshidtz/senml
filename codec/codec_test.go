@@ -92,3 +92,33 @@ func compareFields(pack senml.Pack, ref senml.Pack) error {
 	}
 	return nil
 }
+
+func ExampleEncode() {
+	v := 23.1
+	var p senml.Pack = []senml.Record{
+		{Value: &v, Unit: "Cel", Name: "urn:dev:ow:10e2073a01080063"},
+	}
+
+	dataOut, err := Encode(senml.MediaTypeSenmlJSON, p)
+	if err != nil {
+		panic(err) // handle the error
+	}
+	fmt.Printf("%s", dataOut)
+	// Output: [{"n":"urn:dev:ow:10e2073a01080063","u":"Cel","v":23.1}]
+}
+
+func ExampleDecode() {
+	input := `[{"bn":"room1/temp","u":"Cel","t":1276020076.305,"v":23.5},{"u":"Cel","t":1276020091.305,"v":23.6}]`
+
+	// decode JSON
+	pack, err := Decode(senml.MediaTypeSenmlJSON, []byte(input))
+	if err != nil {
+		panic(err) // handle the error
+	}
+
+	// validate the SenML Pack
+	err = pack.Validate()
+	if err != nil {
+		panic(err) // handle the error
+	}
+}

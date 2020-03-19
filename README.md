@@ -6,8 +6,9 @@
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/farshidtz/senml?sort=semver&label=stable)
 ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/farshidtz/senml?include_prereleases&sort=semver&label=pre)
 
-
 SenML package is an implementation of [RFC8428](https://tools.ietf.org/html/rfc8428) - Sensor Measurement Lists (SenML) in Go.
+
+v2 documentation: [senml](https://pkg.go.dev/github.com/farshidtz/senml/v2), [codec](https://pkg.go.dev/github.com/farshidtz/senml/v2/codec)
 
 It provides fully compliant data model and functionalities for:
 
