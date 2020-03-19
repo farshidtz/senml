@@ -1,8 +1,8 @@
 // Package senml is an implementation of RFC8428 - Sensor Measurement Lists (SenML):
 // https://tools.ietf.org/html/rfc8428
 //
-// The sub-package codec provides various encoding/decoding functions for senml.Pack:
-// https://godoc.org/github.com/farshidtz/senml/codec
+// The sub-package codec provides various encoding/decoding functions for senml.Pack.
+// The documentation for codec package is available at: https://pkg.go.dev/github.com/farshidtz/senml/v2/codec
 package senml
 
 import (
