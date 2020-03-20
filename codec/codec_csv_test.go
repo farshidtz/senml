@@ -78,9 +78,11 @@ func TestDecodeCSV(t *testing.T) {
 // EXAMPLES
 
 func ExampleEncodeCSV() {
+	value := 22.1
 	var pack senml.Pack = []senml.Record{
-		{Time: 1276020000, Name: "room1/temp_label", StringValue: "hot"},
-		{Time: 1276020100, Name: "room1/temp_label", StringValue: "cool"},
+		{Time: 1276020000, Name: "air_quality", StringValue: "good", BaseName: "room1/"},
+		{Time: 1276020100, Name: "air_quality", StringValue: "excellent"},
+		{Time: 1276020100, Name: "temp", Value: &value, Unit: senml.UnitCelsius},
 	}
 
 	// encode to CSV (format: name,excel-time,value,unit)
@@ -91,14 +93,15 @@ func ExampleEncodeCSV() {
 	fmt.Printf("%s\n", csvBytes)
 	// Output:
 	// Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum
-	// 1276020000,0,room1/temp_label,,,hot,,,
-	// 1276020100,0,room1/temp_label,,,cool,,,
+	// 1276020000,0,room1/air_quality,,,good,,,
+	// 1276020100,0,room1/air_quality,,,excellent,,,
+	// 1276020100,0,room1/temp,Cel,22.1,,,,
 }
 
 func ExampleDecodeCSV() {
 	input := `Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum
-946684799,10,dev123temp,degC,22.1,,,,0
-946684799,0,dev123room,degC,,kitchen,,,`
+1276020000,0,room1/air_quality,,,good,,,
+1276020100,0,room1/air_quality,,,excellent,,,`
 
 	// decode JSON
 	pack, err := DecodeCSV([]byte(input), SetDefaultHeader)
@@ -115,8 +118,8 @@ func ExampleDecodeCSV() {
 
 func ExampleWriteCSV() {
 	var pack senml.Pack = []senml.Record{
-		{Time: 1276020000, Name: "room1/temp_label", StringValue: "hot"},
-		{Time: 1276020100, Name: "room1/temp_label", StringValue: "cool"},
+		{Time: 1276020000, Name: "room1/air_quality", StringValue: "good"},
+		{Time: 1276020100, Name: "room1/air_quality", StringValue: "excellent"},
 	}
 
 	var writer io.Writer = os.Stdout // write to stdout
@@ -126,6 +129,6 @@ func ExampleWriteCSV() {
 	}
 	// Output:
 	// Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum
-	// 1276020000,0,room1/temp_label,,,hot,,,
-	// 1276020100,0,room1/temp_label,,,cool,,,
+	// 1276020000,0,room1/air_quality,,,good,,,
+	// 1276020100,0,room1/air_quality,,,excellent,,,
 }

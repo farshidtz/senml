@@ -89,17 +89,26 @@ func TestDecodeJSON(t *testing.T) {
 // EXAMPLES
 
 func ExampleEncodeJSON() {
-	v := 23.1
-	var p senml.Pack = []senml.Record{
-		{Value: &v, Unit: "Cel", Name: "urn:dev:ow:10e2073a01080063"},
+	value := 22.1
+	var pack senml.Pack = []senml.Record{
+		{Time: 1276020000, Name: "air_quality", StringValue: "good", BaseName: "room1/"},
+		{Time: 1276020100, Name: "air_quality", StringValue: "excellent"},
+		{Time: 1276020100, Name: "temp", Value: &value, Unit: senml.UnitCelsius},
 	}
 
-	dataOut, err := EncodeJSON(p)
+	pack.Normalize() // optional
+
+	dataOut, err := EncodeJSON(pack, SetPrettyPrint)
 	if err != nil {
 		panic(err) // handle the error
 	}
 	fmt.Printf("%s", dataOut)
-	// Output: [{"n":"urn:dev:ow:10e2073a01080063","u":"Cel","v":23.1}]
+	// Output:
+	// [
+	//   {"n":"room1/air_quality","t":1276020000,"vs":"good"},
+	//   {"n":"room1/air_quality","t":1276020100,"vs":"excellent"},
+	//   {"n":"room1/temp","u":"Cel","t":1276020100,"v":22.1}
+	// ]
 }
 
 func ExampleDecodeJSON() {
