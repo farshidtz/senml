@@ -301,15 +301,6 @@ func TestValidate(t *testing.T) {
 		}
 	})
 
-	t.Run("bad unknown MTU field", func(t *testing.T) {
-		t.Skip("TODO")
-		//data := []byte(`[{"n":"hi","v":1.0,"mtu_":1.0}]`)
-		//_, err := Decode(data, JSON)
-		//if err == nil {
-		//	t.Fatalf("No error for bad unknown MTU field in: %s", data)
-		//}
-	})
-
 	t.Run("multiple values in record", func(t *testing.T) {
 		value := 1.0
 		pack := Pack{

@@ -253,14 +253,6 @@ func (p Pack) Validate() error {
 			}
 		}
 
-		// Check if name is known Mandatory To Understand
-		//for k :=  r {
-		// 	fmt.Println( "key=" , k  )
-		//         if k[ len(k)-1 ] == '_' {
-		//         	fmt.Println("unknown MTU in record")
-		//		return false
-		//        }
-		// }
 	}
 
 	return nil
