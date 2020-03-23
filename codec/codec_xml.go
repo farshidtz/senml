@@ -33,8 +33,8 @@ var EncodeXML Encoder = func(p senml.Pack, options ...Option) ([]byte, error) {
 	return xml.Marshal(&xmlPack)
 }
 
-// DecodeXML takes a SenML pack in XML bytes and decodes it into a Pack
-var DecodeXML Decoder = func(b []byte, options ...Option) (senml.Pack, error) {
+// DecodeXML takes a SenML pack in XML bytes and decodes it into a Pack. The options are ignored.
+func DecodeXML(b []byte, _ ...Option) (senml.Pack, error) {
 	var temp xmlPack
 	err := xml.Unmarshal(b, &temp)
 	if err != nil {

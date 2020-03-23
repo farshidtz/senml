@@ -5,14 +5,14 @@ import (
 	"github.com/fxamacker/cbor/v2"
 )
 
-// EncodeCBOR serializes the SenML pack into CBOR bytes
-var EncodeCBOR Encoder = func(p senml.Pack, options ...Option) ([]byte, error) {
+// EncodeCBOR serializes the SenML pack into CBOR bytes. The options are ignored.
+func EncodeCBOR(p senml.Pack, _ ...Option) ([]byte, error) {
 
 	return cbor.Marshal(p)
 }
 
-// DecodeCBOR takes a SenML pack in CBOR bytes and decodes it into a Pack
-var DecodeCBOR Decoder = func(b []byte, options ...Option) (senml.Pack, error) {
+// DecodeCBOR takes a SenML pack in CBOR bytes and decodes it into a Pack. The options are ignored.
+func DecodeCBOR(b []byte, _ ...Option) (senml.Pack, error) {
 	var p senml.Pack
 
 	err := cbor.Unmarshal(b, &p)
