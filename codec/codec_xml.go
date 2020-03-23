@@ -13,7 +13,7 @@ type xmlPack struct {
 }
 
 // EncodeXML serializes the SenML pack into XML bytes
-var EncodeXML Encoder = func(p senml.Pack, options ...Option) ([]byte, error) {
+func EncodeXML(p senml.Pack, options ...Option) ([]byte, error) {
 	o := &codecOptions{
 		prettyPrint: false,
 	}
