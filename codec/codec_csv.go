@@ -14,7 +14,7 @@ import (
 // DefaultCSVHeader is the default (currently fixed) CSV header
 const DefaultCSVHeader = "Time,Update Time,Name,Unit,Value,String Value,Boolean Value,Data Value,Sum"
 
-func WriteCSV(p senml.Pack, w io.Writer, options ...Option) error {
+var WriteCSV Writer = func(p senml.Pack, w io.Writer, options ...Option) error {
 	o := &codecOptions{
 		header: false,
 	}
@@ -65,7 +65,7 @@ func WriteCSV(p senml.Pack, w io.Writer, options ...Option) error {
 }
 
 // EncodeCSV serializes the SenML pack into CSV bytes
-func EncodeCSV(p senml.Pack, options ...Option) ([]byte, error) {
+var EncodeCSV Encoder = func(p senml.Pack, options ...Option) ([]byte, error) {
 
 	var buf bytes.Buffer
 	err := WriteCSV(p, &buf, options...)
@@ -75,7 +75,7 @@ func EncodeCSV(p senml.Pack, options ...Option) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func ReadCSV(r io.Reader, options ...Option) (senml.Pack, error) {
+var ReadCSV Reader = func(r io.Reader, options ...Option) (senml.Pack, error) {
 	o := &codecOptions{
 		header: false,
 	}
@@ -159,7 +159,7 @@ func ReadCSV(r io.Reader, options ...Option) (senml.Pack, error) {
 }
 
 // DecodeCSV takes a SenML pack in CSV bytes and decodes it into a Pack
-func DecodeCSV(b []byte, options ...Option) (senml.Pack, error) {
+var DecodeCSV Decoder = func(b []byte, options ...Option) (senml.Pack, error) {
 
 	p, err := ReadCSV(bytes.NewReader(b), options...)
 	if err != nil {

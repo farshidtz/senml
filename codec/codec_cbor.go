@@ -6,13 +6,13 @@ import (
 )
 
 // EncodeCBOR serializes the SenML pack into CBOR bytes
-func EncodeCBOR(p senml.Pack) ([]byte, error) {
+var EncodeCBOR Encoder = func(p senml.Pack, options ...Option) ([]byte, error) {
 
 	return cbor.Marshal(p)
 }
 
 // DecodeCBOR takes a SenML pack in CBOR bytes and decodes it into a Pack
-func DecodeCBOR(b []byte) (senml.Pack, error) {
+var DecodeCBOR Decoder = func(b []byte, options ...Option) (senml.Pack, error) {
 	var p senml.Pack
 
 	err := cbor.Unmarshal(b, &p)

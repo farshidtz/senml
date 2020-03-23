@@ -8,7 +8,7 @@ import (
 )
 
 // EncodeJSON serializes the SenML pack into JSON bytes
-func EncodeJSON(p senml.Pack, options ...Option) ([]byte, error) {
+var EncodeJSON Encoder = func(p senml.Pack, options ...Option) ([]byte, error) {
 	o := &codecOptions{
 		prettyPrint: false,
 	}
@@ -37,7 +37,7 @@ func EncodeJSON(p senml.Pack, options ...Option) ([]byte, error) {
 }
 
 // DecodeJSON takes a SenML pack in JSON bytes and decodes it into a Pack
-func DecodeJSON(b []byte) (senml.Pack, error) {
+var DecodeJSON Decoder = func(b []byte, options ...Option) (senml.Pack, error) {
 	var p senml.Pack
 
 	err := json.Unmarshal(b, &p)

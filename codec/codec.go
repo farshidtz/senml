@@ -4,9 +4,22 @@ package codec
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/farshidtz/senml/v2"
 )
+
+// Encoder is the encoding function type
+type Encoder func(p senml.Pack, options ...Option) ([]byte, error)
+
+// Decoder is the decoding function type
+type Decoder func(b []byte, options ...Option) (senml.Pack, error)
+
+// Reader is the reading function type
+type Reader func(r io.Reader, options ...Option) (senml.Pack, error)
+
+// Write is the writing function type
+type Writer func(p senml.Pack, w io.Writer, options ...Option) error
 
 func Encode(mediaType string, p senml.Pack, options ...Option) ([]byte, error) {
 	switch mediaType {
