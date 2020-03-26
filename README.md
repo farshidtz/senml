@@ -1,14 +1,12 @@
 # SenML: Sensor Measurement Lists
 
 [![GoDoc](https://godoc.org/github.com/farshidtz/senml?status.svg)](https://godoc.org/github.com/farshidtz/senml)
-[![Build Status](https://travis-ci.org/farshidtz/senml.svg)](https://travis-ci.org/farshidtz/senml)
+[![Test](https://github.com/farshidtz/senml/workflows/Test/badge.svg)](https://github.com/farshidtz/senml/actions?query=workflow%3ATest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/farshidtz/senml)](https://goreportcard.com/report/github.com/farshidtz/senml)
-![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/farshidtz/senml?sort=semver&label=stable)
-![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/v/tag/farshidtz/senml?include_prereleases&sort=semver&label=pre)
 
 SenML package is an implementation of [RFC8428](https://tools.ietf.org/html/rfc8428) - Sensor Measurement Lists (SenML) in Go.
 
-v2 documentation: [senml](https://pkg.go.dev/github.com/farshidtz/senml/v2), [codec](https://pkg.go.dev/github.com/farshidtz/senml/v2/codec)
+
 
 It provides fully compliant data model and functionalities for:
 
@@ -22,6 +20,8 @@ It provides fully compliant data model and functionalities for:
     * [CBOR](https://tools.ietf.org/html/rfc8428#section-6)
     * CSV (custom)
       
+## Documentation
+Documentation and various usage examples are availabe as Go Docs: [senml](https://pkg.go.dev/github.com/farshidtz/senml/v2), [codec](https://pkg.go.dev/github.com/farshidtz/senml/v2/codec)
 
 ## Install
 ```
