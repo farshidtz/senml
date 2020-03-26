@@ -30,7 +30,7 @@ func Encode(mediaType string, p senml.Pack, options ...Option) ([]byte, error) {
 		return EncodeXML(p, options...)
 	case senml.MediaTypeSenmlCBOR:
 		return EncodeCBOR(p)
-	case senml.MediaTypeSenmlCSV:
+	case senml.MediaTypeCustomSenmlCSV:
 		return EncodeCSV(p, options...)
 	}
 	return nil, fmt.Errorf("unsupported media type: %s", mediaType)
@@ -45,7 +45,7 @@ func Decode(mediaType string, b []byte, options ...Option) (senml.Pack, error) {
 		return DecodeXML(b)
 	case senml.MediaTypeSenmlCBOR:
 		return DecodeCBOR(b)
-	case senml.MediaTypeSenmlCSV:
+	case senml.MediaTypeCustomSenmlCSV:
 		return DecodeCSV(b, options...)
 	}
 	return nil, fmt.Errorf("unsupported media type: %s", mediaType)

@@ -10,7 +10,7 @@ const (
 	MediaTypeSenmlXML  = "application/senml+xml"
 	MediaTypeSenmlEXI  = "application/senml-exi"
 	// Custom types
-	MediaTypeSenmlCSV = "application/vnd.senml.v2+csv"
+	MediaTypeCustomSenmlCSV = "text/vnd.senml.v2+csv"
 )
 
 // Sensor Streaming Measurement Lists (SenSML) Media Types
@@ -20,5 +20,5 @@ const (
 	MediaTypeSensmlXML  = "application/sensml+xml"
 	MediaTypeSensmlEXI  = "application/sensml-exi"
 	// Custom types
-	MediaTypeSensmlCSV = "application/vnd.sensml.v2+csv"
+	MediaTypeCustomSensmlCSV = "text/vnd.sensml.v2+csv"
 )
