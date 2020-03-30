@@ -23,18 +23,21 @@ It provides fully compliant data model and functionalities for:
 ## Documentation
 Documentation and various usage examples are availabe as Go Docs: [senml](https://pkg.go.dev/github.com/farshidtz/senml/v2), [codec](https://pkg.go.dev/github.com/farshidtz/senml/v2/codec)
 
-## Install
+## Usage
+### Install
 ```
 go get github.com/farshidtz/senml/v2
 ```
 
-## Usage
+### Simple Example
+More examples are available in the documentation.
+
+Decode JSON bytes into a SenML Pack, validate, normalize, and encode it as pretty XML:
 ```go
 package main
 
 import (
 	"fmt"
-	"github.com/farshidtz/senml/v2"
 	"github.com/farshidtz/senml/v2/codec"
 )
 
@@ -56,16 +59,17 @@ func main() {
 	// normalize the SenML Pack
 	pack.Normalize()
 
-	// encode the normalized SenML Pack to JSON
-	dataOut, err := codec.EncodeJSON(pack, codec.SetPrettyPrint)
+	// encode the normalized SenML Pack to XML
+	dataOut, err := codec.EncodeXML(pack, codec.SetPrettyPrint)
 	if err != nil {
 		panic(err) // handle the error
 	}
 	fmt.Printf("%s", dataOut)
 	// Output:
-	// [
-	//   {"n":"room1/temp","u":"Cel","t":1276020076,"v":23.5},
-	//   {"n":"room1/temp","u":"Cel","t":1276020091,"v":23.6}
-	// ]
+	// <sensml xmlns="urn:ietf:params:xml:ns:senml">
+	//   <senml n="room1/temp" u="Cel" t="1.276020076e+09" v="23.5"></senml>
+	//   <senml n="room1/temp" u="Cel" t="1.276020091e+09" v="23.6"></senml>
+	// </sensml>
 }
 ```
+[Go Playground](https://play.golang.org/p/T_Nb7lcF_zg)
