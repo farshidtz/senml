@@ -1,4 +1,10 @@
+github.com/farshidtz/senml-protobuf/go v0.0.0-20200331102437-3087fe366d9e h1:dx3UqeCeIdRFgXwIpd+5JxrOWwanewojYzyzvEyKPGY=
+github.com/farshidtz/senml-protobuf/go v0.0.0-20200331102437-3087fe366d9e/go.mod h1:cFU0KL/60NcIsI+E/BdXx78LYL0brqjAP0qrrKdNwX0=
+github.com/farshidtz/senml-protobuf/go v0.0.0-20200401104923-1a78cd1643d7 h1:AcMMZ0X4MZWq3dJ/BbUn08krQI8+1ceiFLYFeFZdTUI=
+github.com/farshidtz/senml-protobuf/go v0.0.0-20200401104923-1a78cd1643d7/go.mod h1:cFU0KL/60NcIsI+E/BdXx78LYL0brqjAP0qrrKdNwX0=
 github.com/fxamacker/cbor/v2 v2.2.0 h1:6eXqdDDe588rSYAi1HfZKbx6YYQO4mxQ9eC6xYpU/JQ=
 github.com/fxamacker/cbor/v2 v2.2.0/go.mod h1:TA1xS00nchWmaBnEIxPSE5oHLuJBAVvqrtAnWBwBCVo=
+github.com/golang/protobuf v1.3.2 h1:6nsPYzhq5kReh6QImI3k5qWzO4PEbvbIW2cwSfR/6xs=
+github.com/golang/protobuf v1.3.2/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=

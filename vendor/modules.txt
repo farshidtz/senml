@@ -1,5 +1,11 @@
+# github.com/farshidtz/senml-protobuf/go v0.0.0-20200401104923-1a78cd1643d7
+## explicit
+github.com/farshidtz/senml-protobuf/go
 # github.com/fxamacker/cbor/v2 v2.2.0
 ## explicit
 github.com/fxamacker/cbor/v2
+# github.com/golang/protobuf v1.3.2
+## explicit
+github.com/golang/protobuf/proto
 # github.com/x448/float16 v0.8.4
 github.com/x448/float16
