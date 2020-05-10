@@ -19,6 +19,7 @@ It provides fully compliant data model and functionalities for:
     * [XML](https://tools.ietf.org/html/rfc8428#section-7)
     * [CBOR](https://tools.ietf.org/html/rfc8428#section-6)
     * CSV (custom)
+    * Protobuf (experimental)
       
 ## Documentation
 Documentation and various usage examples are availabe as Go Docs: [senml](https://pkg.go.dev/github.com/farshidtz/senml/v2), [codec](https://pkg.go.dev/github.com/farshidtz/senml/v2/codec)
