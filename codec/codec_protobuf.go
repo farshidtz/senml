@@ -6,7 +6,8 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func EncodeProtobufMsg(p senml.Pack)(senmlprotobuf.Message){
+// ConvertToProtobufMessage converts senml.Pack to senmlprotobuf.Message
+func ConvertToProtobufMessage(p senml.Pack) senmlprotobuf.Message {
 	var message senmlprotobuf.Message
 	message.Pack = make([]*senmlprotobuf.Record, len(p))
 	for i := range p {
@@ -60,11 +61,12 @@ func EncodeProtobufMsg(p senml.Pack)(senmlprotobuf.Message){
 
 // EncodeProtobuf serializes the SenML pack into Protobuf bytes. The options are ignored.
 func EncodeProtobuf(p senml.Pack, _ ...Option) ([]byte, error) {
-	message := EncodeProtobufMsg(p)
+	message := ConvertToProtobufMessage(p)
 	return proto.Marshal(&message)
 }
 
-func DecodeProtobufMsg(message senmlprotobuf.Message)(senml.Pack) {
+// ConvertFromProtobufMessage coverts senmlprotobuf.Message to senml.Pack
+func ConvertFromProtobufMessage(message senmlprotobuf.Message) senml.Pack {
 	var p = make(senml.Pack, len(message.Pack))
 	for i := range message.Pack {
 		// BaseName
@@ -123,6 +125,5 @@ func DecodeProtobuf(b []byte, _ ...Option) (senml.Pack, error) {
 		return nil, err
 	}
 
-	return DecodeProtobufMsg(message),nil
-
+	return ConvertFromProtobufMessage(message), nil
 }
