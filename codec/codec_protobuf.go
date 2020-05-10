@@ -6,8 +6,25 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-// ConvertToProtobufMessage converts senml.Pack to senmlprotobuf.Message
-func ConvertToProtobufMessage(p senml.Pack) senmlprotobuf.Message {
+// EncodeProtobuf serializes the SenML pack into Protobuf bytes. The options are ignored.
+func EncodeProtobuf(p senml.Pack, _ ...Option) ([]byte, error) {
+	message := ExportProtobufMessage(p)
+	return proto.Marshal(&message)
+}
+
+// DecodeProtobuf takes a SenML pack in Protobuf bytes and decodes it into a Pack. The options are ignored.
+func DecodeProtobuf(b []byte, _ ...Option) (senml.Pack, error) {
+	var message senmlprotobuf.Message
+	err := proto.Unmarshal(b, &message)
+	if err != nil {
+		return nil, err
+	}
+
+	return ImportProtobufMessage(message), nil
+}
+
+// ExportProtobufMessage converts senml.Pack to senmlprotobuf.Message
+func ExportProtobufMessage(p senml.Pack) senmlprotobuf.Message {
 	var message senmlprotobuf.Message
 	message.Pack = make([]*senmlprotobuf.Record, len(p))
 	for i := range p {
@@ -59,14 +76,8 @@ func ConvertToProtobufMessage(p senml.Pack) senmlprotobuf.Message {
 	return message
 }
 
-// EncodeProtobuf serializes the SenML pack into Protobuf bytes. The options are ignored.
-func EncodeProtobuf(p senml.Pack, _ ...Option) ([]byte, error) {
-	message := ConvertToProtobufMessage(p)
-	return proto.Marshal(&message)
-}
-
-// ConvertFromProtobufMessage coverts senmlprotobuf.Message to senml.Pack
-func ConvertFromProtobufMessage(message senmlprotobuf.Message) senml.Pack {
+// ImportProtobufMessage converts senmlprotobuf.Message to senml.Pack
+func ImportProtobufMessage(message senmlprotobuf.Message) senml.Pack {
 	var p = make(senml.Pack, len(message.Pack))
 	for i := range message.Pack {
 		// BaseName
@@ -115,15 +126,4 @@ func ConvertFromProtobufMessage(message senmlprotobuf.Message) senml.Pack {
 		}
 	}
 	return p
-}
-
-// DecodeProtobuf takes a SenML pack in Protobuf bytes and decodes it into a Pack. The options are ignored.
-func DecodeProtobuf(b []byte, _ ...Option) (senml.Pack, error) {
-	var message senmlprotobuf.Message
-	err := proto.Unmarshal(b, &message)
-	if err != nil {
-		return nil, err
-	}
-
-	return ConvertFromProtobufMessage(message), nil
 }
